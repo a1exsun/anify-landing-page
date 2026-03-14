@@ -77,26 +77,47 @@ export function HighlightsSection() {
       return;
     }
 
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        card,
-        { opacity: 0, x: -96 },
-        {
-          opacity: 1,
-          x: 0,
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top 72%",
-            end: "center center",
-            scrub: 0.8,
-          },
-        },
-      );
-    }, section);
+    const ease = (t: number) => t * t * (3 - 2 * t);
+
+    const apply = (raw: number) => {
+      const p = Math.min(1, Math.max(0, raw));
+      const inEnd = 0.28;
+      const outStart = 0.66;
+      let x = 0;
+      let opacity = 1;
+      let blurPx = 0;
+      if (p < inEnd) {
+        const t = ease(p / inEnd);
+        x = -88 * (1 - t);
+        opacity = 0.15 + 0.85 * t;
+        blurPx = 10 * (1 - t);
+      } else if (p > outStart) {
+        const t = ease((p - outStart) / (1 - outStart));
+        x = -88 * t;
+        opacity = 1 - 0.72 * t;
+        blurPx = 8 * t;
+      }
+      gsap.set(card, {
+        x,
+        opacity,
+        filter: blurPx > 0.4 ? `blur(${blurPx}px)` : "none",
+      });
+    };
+
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: "top bottom",
+      end: "bottom top",
+      scrub: 0.72,
+      onUpdate: (self) => apply(self.progress),
+    });
+
+    apply(st.progress);
+    requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
-      context.revert();
+      st.kill();
+      gsap.set(card, { clearProps: "opacity,transform,filter" });
     };
   }, []);
 
@@ -108,7 +129,7 @@ export function HighlightsSection() {
     >
       <div
         ref={cardRef}
-        className={`${glassClass} w-full max-w-none overflow-hidden`}
+        className={`${glassClass} w-full max-w-none overflow-hidden will-change-transform`}
       >
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-100/70">
           Highlights

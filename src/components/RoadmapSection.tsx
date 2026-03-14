@@ -58,31 +58,52 @@ export function RoadmapSection() {
     const pillars = timeline.querySelectorAll<HTMLElement>("[data-roadmap-pillar]");
     gsap.set(pillars, { clearProps: "transform,opacity,filter" });
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set(timeline, { clearProps: "all", opacity: 1, filter: "none" });
+      gsap.set(timeline, { clearProps: "all", opacity: 1, filter: "none", y: 0 });
       return;
     }
 
-    const ctx = gsap.context(() => {
-      /* 只动外层一次，不对三张卡 stagger，避免 scrub 下各卡不同步像台阶 */
-      gsap.fromTo(
-        timeline,
-        { opacity: 0.5, filter: "blur(6px)" },
-        {
-          opacity: 1,
-          filter: "blur(0px)",
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top 88%",
-            end: "top 58%",
-            scrub: 0.5,
-          },
-        },
-      );
-    }, section);
+    /* 与 Highlights/Features 同构：整段 scrub，强滑入 + 对称滑出 */
+    const ease = (t: number) => t * t * (3 - 2 * t);
+
+    const apply = (raw: number) => {
+      const p = Math.min(1, Math.max(0, raw));
+      const inEnd = 0.26;
+      const outStart = 0.67;
+      let y = 0;
+      let opacity = 1;
+      let blurPx = 0;
+      if (p < inEnd) {
+        const t = ease(p / inEnd);
+        y = 64 * (1 - t);
+        opacity = 0.08 + 0.92 * t;
+        blurPx = 18 * (1 - t);
+      } else if (p > outStart) {
+        const t = ease((p - outStart) / (1 - outStart));
+        y = -56 * t;
+        opacity = 1 - 0.78 * t;
+        blurPx = 12 * t;
+      }
+      gsap.set(timeline, {
+        y,
+        opacity,
+        filter: blurPx > 0.45 ? `blur(${blurPx}px)` : "none",
+      });
+    };
+
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: "top bottom",
+      end: "bottom top",
+      scrub: 0.68,
+      onUpdate: (self) => apply(self.progress),
+    });
+
+    apply(st.progress);
+    requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
-      ctx.revert();
+      st.kill();
+      gsap.set(timeline, { clearProps: "opacity,transform,filter" });
     };
   }, []);
 
@@ -102,7 +123,7 @@ export function RoadmapSection() {
     >
       <div
         ref={timelineRef}
-        className="w-full min-w-0 max-w-5xl shrink-0"
+        className="w-full min-w-0 max-w-5xl shrink-0 will-change-transform"
       >
         <header className="mx-auto mb-8 max-w-xl px-2 py-2 text-center md:mb-12">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.38em] text-cyan-100 [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]">

@@ -45,29 +45,52 @@ export function FeaturesSection() {
       return;
     }
 
-    const cardElements = cards.querySelectorAll<HTMLElement>("[data-feature-card]");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set(cardElements, { clearProps: "all", opacity: 1, x: 0, y: 0 });
+      gsap.set(cards, { clearProps: "all", opacity: 1, x: 0 });
       return;
     }
 
-    const ctx = gsap.context(() => {
-      gsap.from(cardElements, {
-        y: 16,
-        opacity: 0.94,
-        duration: 0.4,
-        stagger: 0.05,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: section,
-          start: "top 78%",
-          toggleActions: "play none none none",
-        },
+    const ease = (t: number) => t * t * (3 - 2 * t);
+
+    const apply = (raw: number) => {
+      const p = Math.min(1, Math.max(0, raw));
+      const inEnd = 0.28;
+      const outStart = 0.66;
+      let x = 0;
+      let opacity = 1;
+      let blurPx = 0;
+      if (p < inEnd) {
+        const t = ease(p / inEnd);
+        x = 88 * (1 - t);
+        opacity = 0.15 + 0.85 * t;
+        blurPx = 10 * (1 - t);
+      } else if (p > outStart) {
+        const t = ease((p - outStart) / (1 - outStart));
+        x = 88 * t;
+        opacity = 1 - 0.72 * t;
+        blurPx = 8 * t;
+      }
+      gsap.set(cards, {
+        x,
+        opacity,
+        filter: blurPx > 0.4 ? `blur(${blurPx}px)` : "none",
       });
-    }, section);
+    };
+
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: "top bottom",
+      end: "bottom top",
+      scrub: 0.72,
+      onUpdate: (self) => apply(self.progress),
+    });
+
+    apply(st.progress);
+    requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
-      ctx.revert();
+      st.kill();
+      gsap.set(cards, { clearProps: "opacity,transform,filter" });
     };
   }, []);
 
@@ -79,7 +102,7 @@ export function FeaturesSection() {
     >
       <div
         ref={cardsRef}
-        className="ml-auto flex h-full w-full max-w-xl flex-col lg:max-w-2xl"
+        className="ml-auto flex h-full w-full max-w-xl flex-col will-change-transform lg:max-w-2xl"
       >
         <header className="shrink-0 pt-2 text-right md:pt-4">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-100/70 sm:text-[0.8rem]">
