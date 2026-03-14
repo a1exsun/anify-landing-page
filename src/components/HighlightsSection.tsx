@@ -125,7 +125,7 @@ export function HighlightsSection() {
     <section
       id="highlights"
       ref={sectionRef}
-      className="relative flex min-h-screen w-full items-center justify-center px-4 py-20 sm:px-6 md:px-10 lg:px-14 xl:px-20"
+      className="relative flex min-h-screen w-full items-start justify-center px-4 pb-20 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6 sm:pt-4 md:px-10 md:pt-6 lg:px-14 lg:pt-8 xl:px-20"
     >
       <div
         ref={cardRef}

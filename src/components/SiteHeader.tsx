@@ -28,17 +28,12 @@ export function SiteHeader() {
     <header className="fixed left-0 right-0 top-0 z-[100] flex justify-center px-3 pt-[max(0.35rem,env(safe-area-inset-top))] md:px-4">
       <div className="relative w-full max-w-[min(40rem,calc(100%-1.5rem))]">
         <div
-          className="flex w-full items-center gap-2 rounded-xl border border-amber-200/20 bg-gradient-to-b from-amber-200/14 via-amber-400/[0.07] to-amber-300/[0.05] px-2.5 py-1.5 shadow-[0_4px_20px_-6px_rgba(251,191,36,0.22),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md md:gap-3 md:px-3.5 md:py-1.5"
+          className="flex w-full items-center gap-2 rounded-xl bg-gradient-to-b from-amber-200/14 via-amber-400/[0.07] to-amber-300/[0.05] px-2.5 py-1.5 shadow-[0_4px_20px_-6px_rgba(251,191,36,0.18)] backdrop-blur-md md:gap-3 md:px-3.5 md:py-1.5"
           style={{
             WebkitBackdropFilter: "blur(14px) saturate(1.1)",
             backdropFilter: "blur(14px) saturate(1.1)",
           }}
         >
-          <div
-            className="pointer-events-none absolute inset-x-3 top-0 h-px rounded-full bg-gradient-to-r from-transparent via-amber-200/45 to-transparent"
-            aria-hidden
-          />
-
           {/* 左：Anify */}
           <a
             href="#hero"
@@ -110,7 +105,7 @@ export function SiteHeader() {
 
         {menuOpen ? (
           <div
-            className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-[101] rounded-2xl border border-amber-200/20 bg-gradient-to-b from-amber-200/20 to-amber-400/10 p-3 shadow-lg backdrop-blur-md md:hidden"
+            className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-[101] rounded-2xl bg-gradient-to-b from-amber-200/20 to-amber-400/10 p-3 shadow-lg backdrop-blur-md md:hidden"
             style={{ WebkitBackdropFilter: "blur(14px)" }}
           >
             <nav className="flex flex-col gap-0.5" aria-label="Section">
