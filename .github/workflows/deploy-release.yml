@@ -1,0 +1,60 @@
+name: Deploy Release
+
+on:
+  push:
+    branches:
+      - preview
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: anify-landing-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-release:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name }}
+    permissions:
+      contents: read
+    env:
+      CI: "true"
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Enable pnpm via Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Deploy worker
+        id: deploy_release
+        env:
+          RELEASE_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          log_file="$(mktemp)"
+          if [ "$RELEASE_BRANCH" = "preview" ]; then
+            pnpm exec wrangler deploy --env preview 2>&1 | tee "$log_file"
+          else
+            pnpm exec wrangler deploy 2>&1 | tee "$log_file"
+          fi
+          deployment_url="$(grep -Eo 'https://[^[:space:]]+workers\.dev' "$log_file" | tail -n 1 || true)"
+          if [ -n "$deployment_url" ]; then
+            echo "deployment_url=$deployment_url" >> "$GITHUB_OUTPUT"
+          fi
