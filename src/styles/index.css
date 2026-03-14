@@ -60,6 +60,17 @@ body {
   scroll-margin-top: calc(3.25rem + env(safe-area-inset-top));
 }
 
+/* ?debug=1：事件穿到高斯 canvas；链接/按钮仍可点 */
+.landing-debug-scroll a,
+.landing-debug-scroll button,
+.landing-debug-scroll input,
+.landing-debug-scroll select,
+.landing-debug-scroll textarea,
+.landing-debug-scroll [role="button"],
+.landing-debug-scroll summary {
+  pointer-events: auto;
+}
+
 * {
   box-sizing: border-box;
 }

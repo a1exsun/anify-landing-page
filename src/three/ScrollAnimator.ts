@@ -47,9 +47,8 @@ export class ScrollAnimator {
   }
 
   private updateCamera(t: number): void {
-    const position = this.cameraPath.getPositionAt(t);
-    const lookAt = this.cameraPath.getLookAtAt(t);
+    const { position, quaternion } = this.cameraPath.getPoseAt(t);
     this.camera.position.copy(position);
-    this.camera.lookAt(lookAt);
+    this.camera.quaternion.copy(quaternion);
   }
 }

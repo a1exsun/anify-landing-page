@@ -39,11 +39,36 @@ function normalizeError(error: unknown): Error {
   return new Error(typeof error === "string" ? error : "Unknown splat loading error");
 }
 
+export function isLandingDebugMode(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (new URLSearchParams(window.location.search).get("debug") === "1") return true;
+    if (window.localStorage.getItem("anify-landing-debug") === "1") return true;
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
 export class SplatScene {
   private camera: THREE.PerspectiveCamera | null = null;
   private container: HTMLDivElement | null = null;
   private contextLostRetried = false;
   private disposed = false;
+  private dragRafId: number | null = null;
+  private dragLastTime = 0;
+  private debugMode = false;
+  private keys = new Set<string>();
+  private lookYaw = 0;
+  private lookPitch = 0;
+  private dragging = false;
+  private lastPointerX = 0;
+  private lastPointerY = 0;
+  private boundKeyDown!: (e: KeyboardEvent) => void;
+  private boundKeyUp!: (e: KeyboardEvent) => void;
+  private boundPointerDown!: (e: PointerEvent) => void;
+  private boundPointerMove!: (e: PointerEvent) => void;
+  private boundPointerUp!: () => void;
   private downsample = isOldIOS() ? 4 : 2;
   private errorCallbacks: Array<(err: Error) => void> = [];
   private fullMesh: SplatMeshInstance | null = null;
@@ -55,6 +80,9 @@ export class SplatScene {
   private scene: THREE.Scene | null = null;
   private splatUrl = "";
   private tabHidden = false;
+
+  private readonly moveSpeed = 2.2;
+  private readonly mouseSens = 0.004;
 
   onLoad(cb: () => void): void {
     this.loadCallbacks.push(cb);
@@ -91,6 +119,21 @@ export class SplatScene {
 
   dispose(): void {
     this.disposed = true;
+
+    if (this.dragRafId !== null) {
+      cancelAnimationFrame(this.dragRafId);
+      this.dragRafId = null;
+    }
+
+    if (this.debugMode && this.renderer?.domElement) {
+      const el = this.renderer.domElement;
+      window.removeEventListener("keydown", this.boundKeyDown);
+      window.removeEventListener("keyup", this.boundKeyUp);
+      el.removeEventListener("pointerdown", this.boundPointerDown);
+      el.removeEventListener("pointermove", this.boundPointerMove);
+      window.removeEventListener("pointerup", this.boundPointerUp);
+      window.removeEventListener("blur", this.boundPointerUp);
+    }
 
     if (this.revealFrameId !== null) {
       cancelAnimationFrame(this.revealFrameId);
@@ -162,8 +205,67 @@ export class SplatScene {
     this.renderer.domElement.addEventListener("webglcontextrestored", this.onContextRestored);
     this.container.appendChild(this.renderer.domElement);
 
+    this.debugMode = isLandingDebugMode();
+    if (this.debugMode && this.renderer.domElement) {
+      const el = this.renderer.domElement;
+      el.style.cursor = "grab";
+      this.lookYaw = 0;
+      this.lookPitch = 0;
+      this.camera.position.set(0, 0.2, 1.35);
+      this.applyLookRotation();
+
+      this.boundKeyDown = (e: KeyboardEvent) => {
+        const k = e.key.toLowerCase();
+        if (["w", "a", "s", "d", "q", "e"].includes(k)) {
+          this.keys.add(k);
+          e.preventDefault();
+        }
+      };
+      this.boundKeyUp = (e: KeyboardEvent) => {
+        this.keys.delete(e.key.toLowerCase());
+      };
+      this.boundPointerDown = (e: PointerEvent) => {
+        if (e.button !== 0) return;
+        this.dragging = true;
+        this.lastPointerX = e.clientX;
+        this.lastPointerY = e.clientY;
+        el.setPointerCapture(e.pointerId);
+        el.style.cursor = "grabbing";
+      };
+      this.boundPointerMove = (e: PointerEvent) => {
+        if (!this.dragging) return;
+        const dx = e.clientX - this.lastPointerX;
+        const dy = e.clientY - this.lastPointerY;
+        this.lastPointerX = e.clientX;
+        this.lastPointerY = e.clientY;
+        this.lookYaw -= dx * this.mouseSens;
+        this.lookPitch -= dy * this.mouseSens;
+        const lim = Math.PI / 2 - 0.08;
+        this.lookPitch = Math.max(-lim, Math.min(lim, this.lookPitch));
+        this.applyLookRotation();
+      };
+      this.boundPointerUp = () => {
+        this.dragging = false;
+        el.style.cursor = "grab";
+      };
+
+      window.addEventListener("keydown", this.boundKeyDown);
+      window.addEventListener("keyup", this.boundKeyUp);
+      el.addEventListener("pointerdown", this.boundPointerDown);
+      el.addEventListener("pointermove", this.boundPointerMove);
+      window.addEventListener("pointerup", this.boundPointerUp);
+      window.addEventListener("blur", this.boundPointerUp);
+    }
+
     window.addEventListener("resize", this.onResize);
     document.addEventListener("visibilitychange", this.onVisibilityChange);
+  }
+
+  private applyLookRotation(): void {
+    if (!this.camera) return;
+    const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.lookYaw);
+    const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.lookPitch);
+    this.camera.quaternion.copy(qYaw).multiply(qPitch);
   }
 
   private loadSplat(): void {
@@ -342,7 +444,43 @@ export class SplatScene {
     }
 
     this.readyNotified = true;
+    if (this.debugMode) {
+      this.startDebugLoop();
+    }
     this.fireLoadCallbacks();
+  }
+
+  private startDebugLoop(): void {
+    if (!this.debugMode || !this.camera || !this.renderer) {
+      return;
+    }
+    this.dragLastTime = performance.now();
+    const forward = new THREE.Vector3();
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3(0, 1, 0);
+
+    const loop = () => {
+      if (this.disposed || !this.camera || !this.renderer) {
+        return;
+      }
+      const now = performance.now();
+      const dt = Math.min(0.05, (now - this.dragLastTime) / 1000);
+      this.dragLastTime = now;
+
+      this.camera.getWorldDirection(forward);
+      right.crossVectors(forward, up).normalize();
+      const v = this.moveSpeed * dt;
+      if (this.keys.has("w")) this.camera.position.addScaledVector(forward, v);
+      if (this.keys.has("s")) this.camera.position.addScaledVector(forward, -v);
+      if (this.keys.has("a")) this.camera.position.addScaledVector(right, -v);
+      if (this.keys.has("d")) this.camera.position.addScaledVector(right, v);
+      if (this.keys.has("q")) this.camera.position.y -= v;
+      if (this.keys.has("e")) this.camera.position.y += v;
+
+      this.render();
+      this.dragRafId = requestAnimationFrame(loop);
+    };
+    this.dragRafId = requestAnimationFrame(loop);
   }
 
   private fireLoadCallbacks(): void {
