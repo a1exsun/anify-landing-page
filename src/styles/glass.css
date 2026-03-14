@@ -1,0 +1,66 @@
+:root {
+  --glass-bg: rgba(237, 244, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-shadow: rgba(0, 0, 0, 0.26);
+}
+
+.glass {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)),
+    var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  box-shadow:
+    0 24px 80px -28px var(--glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  position: relative;
+}
+
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 48%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+.glass-fallback {
+  background: rgba(6, 10, 22, 0.76) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.glass-card {
+  border-radius: 28px;
+  padding: 1.5rem;
+}
+
+.glass-timeline {
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .glass-card {
+    padding: 2rem;
+  }
+
+  .glass-timeline {
+    padding: 1.5rem 2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .glass {
+    backdrop-filter: blur(20px) saturate(1.55);
+    -webkit-backdrop-filter: blur(20px) saturate(1.55);
+  }
+}
