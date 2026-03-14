@@ -10,16 +10,9 @@ function sparkPolyfillPlugin(): Plugin {
 
   return {
     configResolved() {
-      const polyfillPath = path.resolve(
-        __dirname,
-        "node_modules/compression-streams-polyfill/umd/index.js",
-      );
-
+      const polyfillPath = path.resolve(__dirname, "node_modules/compression-streams-polyfill/umd/index.js");
       polyfillCode = fs.readFileSync(polyfillPath, "utf-8");
-      polyfillCode = polyfillCode
-        .replace(/\\/g, "\\\\")
-        .replace(/'/g, "\\'")
-        .replace(/\n/g, "\\n");
+      polyfillCode = polyfillCode.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n");
     },
     enforce: "pre",
     name: "spark-polyfill",
