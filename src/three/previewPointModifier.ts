@@ -45,10 +45,7 @@ export function createPreviewPointModifier(): any {
     const jitter = dyno.mul(jitterAmount, pulse);
     const center = dyno.add(splat.center, dyno.mul(signedHashVec, jitter));
 
-    const avgScale = dyno.mul(
-      dyno.add(dyno.add(scaleParts.x, scaleParts.y), scaleParts.z),
-      oneThird,
-    );
+    const avgScale = dyno.mul(dyno.add(dyno.add(scaleParts.x, scaleParts.y), scaleParts.z), oneThird);
     const pointScale = dyno.max(dyno.mul(avgScale, dyno.mul(pointSize, pulse)), minPointSize);
     const scales = dyno.combine({ vectorType: "vec3", x: pointScale, y: pointScale, z: pointScale });
 

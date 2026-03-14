@@ -14,22 +14,15 @@ const PROGRESSIVE_REVEAL = {
   ringStrength: 0.66,
 };
 
-interface ProgressiveUrls {
-  preview: string;
-  full: string;
-}
-
-type SceneMesh = THREE.Object3D & {
-  dispose?: () => void;
-  getBoundingBox?: (worldSpace?: boolean) => THREE.Box3 | undefined;
+type SplatMeshInstance = SplatMesh & {
   initialized: Promise<unknown>;
   needsUpdate?: boolean;
-  quaternion: THREE.Quaternion;
+  objectModifier?: unknown;
   updateGenerator?: () => void;
   worldModifier?: unknown;
 };
 
-function getProgressiveUrls(splatUrl: string): ProgressiveUrls {
+function getProgressiveUrls(splatUrl: string): { full: string; preview: string } {
   if (splatUrl.endsWith("_500k.spz")) {
     const base = splatUrl.slice(0, -"_500k.spz".length);
     return { preview: `${base}_100k.spz`, full: splatUrl };
@@ -39,31 +32,45 @@ function getProgressiveUrls(splatUrl: string): ProgressiveUrls {
 }
 
 function normalizeError(error: unknown): Error {
-  return error instanceof Error ? error : new Error(String(error));
+  if (error instanceof Error) {
+    return error;
+  }
+
+  return new Error(typeof error === "string" ? error : "Unknown splat loading error");
 }
 
 export class SplatScene {
   private camera: THREE.PerspectiveCamera | null = null;
   private container: HTMLDivElement | null = null;
-  private contextLossCount = 0;
+  private contextLostRetried = false;
   private disposed = false;
   private downsample = isOldIOS() ? 4 : 2;
-  private errorCallbacks: Array<(error: Error) => void> = [];
-  private fullMesh: SceneMesh | null = null;
+  private errorCallbacks: Array<(err: Error) => void> = [];
+  private fullMesh: SplatMeshInstance | null = null;
   private loadCallbacks: Array<() => void> = [];
-  private previewMesh: SceneMesh | null = null;
+  private previewMesh: SplatMeshInstance | null = null;
+  private readyNotified = false;
   private renderer: THREE.WebGLRenderer | null = null;
   private revealFrameId: number | null = null;
   private scene: THREE.Scene | null = null;
   private splatUrl = "";
   private tabHidden = false;
 
-  onLoad(callback: () => void): void {
-    this.loadCallbacks.push(callback);
+  onLoad(cb: () => void): void {
+    this.loadCallbacks.push(cb);
   }
 
-  onError(callback: (error: Error) => void): void {
-    this.errorCallbacks.push(callback);
+  onError(cb: (err: Error) => void): void {
+    this.errorCallbacks.push(cb);
+  }
+
+  init(container: HTMLDivElement, splatUrl: string): void {
+    this.container = container;
+    this.splatUrl = splatUrl;
+    this.initWebGL();
+    if (this.renderer) {
+      this.loadSplat();
+    }
   }
 
   getCamera(): THREE.PerspectiveCamera | null {
@@ -72,13 +79,6 @@ export class SplatScene {
 
   isReady(): boolean {
     return this.previewMesh !== null || this.fullMesh !== null;
-  }
-
-  init(container: HTMLDivElement, splatUrl: string): void {
-    this.container = container;
-    this.splatUrl = splatUrl;
-    this.disposed = false;
-    this.initWebGL();
   }
 
   render(): void {
@@ -91,28 +91,53 @@ export class SplatScene {
 
   dispose(): void {
     this.disposed = true;
-    this.teardown();
+
+    if (this.revealFrameId !== null) {
+      cancelAnimationFrame(this.revealFrameId);
+      this.revealFrameId = null;
+    }
+
     window.removeEventListener("resize", this.onResize);
     document.removeEventListener("visibilitychange", this.onVisibilityChange);
-    this.container = null;
+
+    this.previewMesh?.dispose?.();
+    this.fullMesh?.dispose?.();
+
+    if (this.renderer) {
+      this.renderer.domElement.removeEventListener("webglcontextlost", this.onContextLost);
+      this.renderer.domElement.removeEventListener("webglcontextrestored", this.onContextRestored);
+      this.renderer.dispose();
+    }
+
+    if (this.container && this.renderer?.domElement.parentElement === this.container) {
+      this.container.removeChild(this.renderer.domElement);
+    } else if (this.container) {
+      this.container.innerHTML = "";
+    }
+
+    this.camera = null;
+    this.fullMesh = null;
+    this.previewMesh = null;
+    this.renderer = null;
+    this.scene = null;
   }
 
   private initWebGL(): void {
-    const container = this.container;
-    if (!container) {
+    if (!this.container) {
       return;
     }
 
     const oldIOS = isOldIOS();
-    const pixelRatio = oldIOS ? 1 : Math.min(window.devicePixelRatio, 1.5);
     const isMobile = isMobileDevice();
-
-    container.style.background = "";
+    const pixelRatio = oldIOS ? 1.0 : Math.min(window.devicePixelRatio, 1.5);
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(isMobile ? 80 : 70, 1, 0.1, 1000);
-    this.camera.position.set(0, 0.5, 3);
-    this.camera.lookAt(0, 0, 0);
+    this.camera = new THREE.PerspectiveCamera(
+      isMobile ? 80 : 70,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000,
+    );
 
     try {
       this.renderer = new THREE.WebGLRenderer({
@@ -131,17 +156,14 @@ export class SplatScene {
 
     this.renderer.setClearColor(0x000000, 1);
     this.renderer.setPixelRatio(pixelRatio);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+
     this.renderer.domElement.addEventListener("webglcontextlost", this.onContextLost);
     this.renderer.domElement.addEventListener("webglcontextrestored", this.onContextRestored);
-
-    container.innerHTML = "";
-    container.appendChild(this.renderer.domElement);
+    this.container.appendChild(this.renderer.domElement);
 
     window.addEventListener("resize", this.onResize);
     document.addEventListener("visibilitychange", this.onVisibilityChange);
-
-    this.onResize();
-    this.loadSplat();
   }
 
   private loadSplat(): void {
@@ -150,33 +172,29 @@ export class SplatScene {
     }
 
     const urls = getProgressiveUrls(this.splatUrl);
-    const previewMesh = new SplatMesh({
+    this.previewMesh = new SplatMesh({
       downsample: this.downsample,
       objectModifier: createPreviewPointModifier(),
       url: urls.preview,
       worker: true,
-    } as never) as SceneMesh;
+    } as never) as SplatMeshInstance;
+    this.previewMesh.quaternion.set(1, 0, 0, 0);
+    this.scene.add(this.previewMesh);
 
-    previewMesh.quaternion.set(1, 0, 0, 0);
-    this.previewMesh = previewMesh;
-    this.scene.add(previewMesh);
-
-    void previewMesh.initialized
+    void this.previewMesh.initialized
       .then(() => {
         if (this.disposed) {
           return;
         }
 
+        this.notifyReady();
         this.render();
-
-        if (urls.preview === urls.full) {
-          this.fullMesh = previewMesh;
-          this.previewMesh = null;
-          this.fireLoad();
+        if (urls.full !== urls.preview) {
+          this.loadFullQuality(urls.full);
           return;
         }
 
-        this.loadFullQuality(urls.full);
+        this.fullMesh = this.previewMesh;
       })
       .catch((error: unknown) => {
         if (this.disposed) {
@@ -189,28 +207,20 @@ export class SplatScene {
   }
 
   private loadFullQuality(fullUrl: string): void {
-    const scene = this.scene;
-    if (!scene) {
-      return;
-    }
-
-    const fullMesh = new SplatMesh({
+    this.fullMesh = new SplatMesh({
       downsample: this.downsample,
       url: fullUrl,
       worker: true,
-    } as never) as SceneMesh;
+    } as never) as SplatMeshInstance;
+    this.fullMesh.quaternion.set(1, 0, 0, 0);
 
-    fullMesh.quaternion.set(1, 0, 0, 0);
-
-    void fullMesh.initialized
+    void this.fullMesh.initialized
       .then(() => {
-        if (this.disposed || !this.scene) {
-          fullMesh.dispose?.();
+        if (this.disposed || !this.scene || !this.fullMesh) {
           return;
         }
 
-        this.fullMesh = fullMesh;
-        this.scene.add(fullMesh);
+        this.scene.add(this.fullMesh);
         this.startRevealTransition();
       })
       .catch(() => {
@@ -218,59 +228,64 @@ export class SplatScene {
           return;
         }
 
-        this.fireLoad();
+        this.fireLoadCallbacks();
       });
   }
 
   private startRevealTransition(): void {
     const lowMesh = this.previewMesh;
     const highMesh = this.fullMesh;
-    if (!lowMesh || !highMesh) {
-      this.fireLoad();
+
+    if (!this.scene || !lowMesh || !highMesh || lowMesh === highMesh) {
+      this.fireLoadCallbacks();
       return;
     }
 
-    const { center, edgeSoftness, maxRadius, ringWidth } = this.getRevealParams(highMesh);
+    const box = new THREE.Box3().setFromObject(highMesh);
+    const center = box.getCenter(new THREE.Vector3());
+    const maxRadius = this.resolveMaxRadius(box, center);
     const radius = dyno.dynoFloat(0, "landingRevealRadius");
-    const centerUniform = dyno.dynoVec3([center.x, center.y, center.z], "landingRevealCenter");
-    const edgeSoftnessUniform = dyno.dynoFloat(edgeSoftness, "landingRevealEdgeSoftness");
-    const ringColor = dyno.dynoVec3(RING_COLOR, "landingRevealRingColor");
+    const revealCenter = dyno.dynoVec3([center.x, center.y, center.z], "landingRevealCenter");
+    const edgeSoftness = dyno.dynoFloat(maxRadius * 0.08, "landingRevealEdgeSoftness");
     const ringStrength = dyno.dynoFloat(PROGRESSIVE_REVEAL.ringStrength, "landingRevealRingStrength");
-    const ringWidthUniform = dyno.dynoFloat(ringWidth, "landingRevealRingWidth");
+    const ringWidth = dyno.dynoFloat(maxRadius * 0.04, "landingRevealRingWidth");
+    const ringColor = dyno.dynoVec3(RING_COLOR, "landingRevealRingColor");
 
     lowMesh.worldModifier = createRadialTransitionModifier({
-      center: centerUniform,
-      edgeSoftness: edgeSoftnessUniform,
+      center: revealCenter,
+      edgeSoftness,
       isHighRes: false,
       radius,
       ringColor,
       ringStrength,
-      ringWidth: ringWidthUniform,
+      ringWidth,
     });
     lowMesh.updateGenerator?.();
 
     highMesh.worldModifier = createRadialTransitionModifier({
-      center: centerUniform,
-      edgeSoftness: edgeSoftnessUniform,
+      center: revealCenter,
+      edgeSoftness,
       isHighRes: true,
       radius,
       ringColor,
       ringStrength,
-      ringWidth: ringWidthUniform,
+      ringWidth,
     });
     highMesh.updateGenerator?.();
 
     const startedAt = performance.now();
 
     const tick = () => {
-      if (this.disposed || !this.fullMesh) {
+      if (this.disposed) {
         return;
       }
 
       const elapsed = performance.now() - startedAt;
       const progress = Math.min(1, elapsed / PROGRESSIVE_REVEAL.durationMs);
       const eased =
-        progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
       radius.value = eased * maxRadius;
       lowMesh.needsUpdate = true;
@@ -285,66 +300,57 @@ export class SplatScene {
       if (this.scene?.children.includes(lowMesh)) {
         this.scene.remove(lowMesh);
       }
-
       lowMesh.dispose?.();
       this.previewMesh = null;
+
       highMesh.worldModifier = undefined;
       highMesh.updateGenerator?.();
+
       this.revealFrameId = null;
-      this.fireLoad();
+      this.fireLoadCallbacks();
     };
 
     this.revealFrameId = requestAnimationFrame(tick);
   }
 
-  private getRevealParams(mesh: SceneMesh): {
-    center: THREE.Vector3;
-    edgeSoftness: number;
-    maxRadius: number;
-    ringWidth: number;
-  } {
-    try {
-      const box = mesh.getBoundingBox?.(true) ?? new THREE.Box3().setFromObject(mesh);
-      const center = box.getCenter(new THREE.Vector3());
-      const corners = [
-        new THREE.Vector3(box.min.x, box.min.y, box.min.z),
-        new THREE.Vector3(box.min.x, box.min.y, box.max.z),
-        new THREE.Vector3(box.min.x, box.max.y, box.min.z),
-        new THREE.Vector3(box.min.x, box.max.y, box.max.z),
-        new THREE.Vector3(box.max.x, box.min.y, box.min.z),
-        new THREE.Vector3(box.max.x, box.min.y, box.max.z),
-        new THREE.Vector3(box.max.x, box.max.y, box.min.z),
-        new THREE.Vector3(box.max.x, box.max.y, box.max.z),
-      ];
-      const maxDistance = corners.reduce((largest, corner) => Math.max(largest, corner.distanceTo(center)), 0);
-
-      if (Number.isFinite(maxDistance) && maxDistance > 0) {
-        const maxRadius = maxDistance * 1.15;
-        return {
-          center,
-          edgeSoftness: maxRadius * 0.04,
-          maxRadius,
-          ringWidth: maxRadius * 0.025,
-        };
-      }
-    } catch {
-      // Ignore and fall back to defaults.
+  private resolveMaxRadius(box: THREE.Box3, center: THREE.Vector3): number {
+    if (box.isEmpty()) {
+      return PROGRESSIVE_REVEAL.fallbackMaxRadius;
     }
 
-    return {
-      center: new THREE.Vector3(),
-      edgeSoftness: 4,
-      maxRadius: PROGRESSIVE_REVEAL.fallbackMaxRadius,
-      ringWidth: 2,
-    };
+    const corners = [
+      new THREE.Vector3(box.min.x, box.min.y, box.min.z),
+      new THREE.Vector3(box.min.x, box.min.y, box.max.z),
+      new THREE.Vector3(box.min.x, box.max.y, box.min.z),
+      new THREE.Vector3(box.min.x, box.max.y, box.max.z),
+      new THREE.Vector3(box.max.x, box.min.y, box.min.z),
+      new THREE.Vector3(box.max.x, box.min.y, box.max.z),
+      new THREE.Vector3(box.max.x, box.max.y, box.min.z),
+      new THREE.Vector3(box.max.x, box.max.y, box.max.z),
+    ];
+
+    const maxCornerDistance = corners.reduce((maxDistance, corner) => {
+      return Math.max(maxDistance, corner.distanceTo(center));
+    }, 0);
+
+    return maxCornerDistance > 0 ? maxCornerDistance : PROGRESSIVE_REVEAL.fallbackMaxRadius;
   }
 
-  private fireError(error: Error): void {
-    this.errorCallbacks.forEach((callback) => callback(error));
+  private notifyReady(): void {
+    if (this.readyNotified) {
+      return;
+    }
+
+    this.readyNotified = true;
+    this.fireLoadCallbacks();
   }
 
-  private fireLoad(): void {
-    this.loadCallbacks.forEach((callback) => callback());
+  private fireLoadCallbacks(): void {
+    this.loadCallbacks.forEach((cb) => cb());
+  }
+
+  private fireError(err: Error): void {
+    this.errorCallbacks.forEach((cb) => cb(err));
   }
 
   private showFallback(): void {
@@ -353,43 +359,14 @@ export class SplatScene {
     }
   }
 
-  private teardown(): void {
-    if (this.revealFrameId !== null) {
-      cancelAnimationFrame(this.revealFrameId);
-      this.revealFrameId = null;
-    }
-
-    this.previewMesh?.dispose?.();
-    this.fullMesh?.dispose?.();
-
-    if (this.renderer) {
-      this.renderer.domElement.removeEventListener("webglcontextlost", this.onContextLost);
-      this.renderer.domElement.removeEventListener("webglcontextrestored", this.onContextRestored);
-      this.renderer.dispose();
-    }
-
-    if (this.container) {
-      this.container.innerHTML = "";
-    }
-
-    this.previewMesh = null;
-    this.fullMesh = null;
-    this.renderer = null;
-    this.scene = null;
-    this.camera = null;
-  }
-
   private onResize = (): void => {
-    if (!this.camera || !this.renderer || !this.container) {
+    if (!this.camera || !this.renderer) {
       return;
     }
 
-    const width = this.container.clientWidth || window.innerWidth;
-    const height = this.container.clientHeight || window.innerHeight;
-
-    this.camera.aspect = width / height;
+    this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.render();
   };
 
@@ -402,21 +379,33 @@ export class SplatScene {
 
   private onContextLost = (event: Event): void => {
     event.preventDefault();
-    this.contextLossCount += 1;
 
-    if (this.contextLossCount > 1) {
-      this.fireError(new Error("WebGL context lost"));
-      this.showFallback();
-    }
-  };
-
-  private onContextRestored = (): void => {
-    if (this.disposed || !this.container) {
+    if (!this.contextLostRetried) {
+      this.contextLostRetried = true;
       return;
     }
 
-    this.teardown();
-    this.contextLossCount = 0;
+    this.fireError(new Error("WebGL context lost"));
+    this.showFallback();
+  };
+
+  private onContextRestored = (): void => {
+    const container = this.container;
+    const splatUrl = this.splatUrl;
+
+    if (!container) {
+      return;
+    }
+
+    this.dispose();
+    this.disposed = false;
+    this.contextLostRetried = false;
+    this.readyNotified = false;
+    this.container = container;
+    this.splatUrl = splatUrl;
     this.initWebGL();
+    if (this.renderer) {
+      this.loadSplat();
+    }
   };
 }
