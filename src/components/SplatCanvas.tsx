@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { SplatScene } from "@/three/SplatScene";
 
 const DEFAULT_SPLAT_URL =
-  "https://oss.anify.ai/gs/3b5320a4-72b4-4eb4-98fe-13c78ae1c070_ceramic_500k.spz";
+  "https://oss.anify.ai/gs/elder-tree-hollow_500k.spz";
 const FALLBACK_GRADIENT = "linear-gradient(135deg, #0a0a1a, #1a1a2e)";
 
 interface SplatCanvasProps {
