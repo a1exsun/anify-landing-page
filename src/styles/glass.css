@@ -34,6 +34,12 @@
   z-index: 1;
 }
 
+/* 允许绝对定位条不被 .glass > * 盖成 relative */
+.glass > .roadmap-pillar-accent {
+  position: absolute;
+  z-index: 0;
+}
+
 .glass-fallback {
   background: rgba(5, 8, 18, 0.82) !important;
   backdrop-filter: none !important;

@@ -84,3 +84,52 @@ select {
 .font-wordmark {
   font-family: var(--font-wordmark);
 }
+
+/* Roadmap：手机单列；桌面 flex 一行 nowrap，杜绝第三张换行「掉下去」 */
+[data-roadmap-pillars] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  [data-roadmap-pillars] {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 1.25rem;
+  }
+
+  [data-roadmap-pillars] > article {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-roadmap-pillars] {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  [data-roadmap-pillars] > article {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Roadmap 标题：无黑底，仅轻阴影保证亮背景可读 */
+.roadmap-hero-title {
+  color: #f8fbff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    0 2px 16px rgba(0, 0, 0, 0.2);
+}
