@@ -14,6 +14,32 @@ const navLinkClass =
 const playGoldClass =
   "inline-flex items-center justify-center rounded-lg bg-gradient-to-b from-amber-300 to-amber-600 px-2.5 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-[#1a1208] shadow-[0_0_12px_-2px_rgba(251,191,36,0.45)] transition-transform hover:scale-[1.02] active:scale-[0.98] md:px-3 md:py-1.5";
 
+const anifyWordmarkClass =
+  "font-wordmark font-semibold leading-none text-white";
+
+function AnifyHomeLink({
+  className,
+  onNavigate,
+}: {
+  className?: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <a
+      href="#hero"
+      className={className}
+      style={{ letterSpacing: "0.02em" }}
+      onClick={(e) => {
+        e.preventDefault();
+        onNavigate?.();
+        smoothNavScrollToHash("#hero");
+      }}
+    >
+      Anify
+    </a>
+  );
+}
+
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -34,20 +60,11 @@ export function SiteHeader() {
             backdropFilter: "blur(14px) saturate(1.1)",
           }}
         >
-          {/* 左：Anify */}
-          <a
-            href="#hero"
-            className="font-wordmark relative shrink-0 text-base font-semibold leading-none text-white md:text-[1.05rem]"
-            style={{ letterSpacing: "0.02em" }}
-            onClick={(e) => {
-              e.preventDefault();
-              smoothNavScrollToHash("#hero");
-            }}
-          >
-            Anify
-          </a>
+          {/* 桌面：左 Anify + 右导航（主流顶栏） */}
+          <AnifyHomeLink
+            className={`relative hidden shrink-0 text-[1.05rem] md:block ${anifyWordmarkClass}`}
+          />
 
-          {/* 桌面：中间~右导航 + Play */}
           <nav
             className="relative ml-auto hidden flex-wrap items-center justify-end gap-x-0 gap-y-1 md:flex"
             aria-label="Section"
@@ -77,22 +94,29 @@ export function SiteHeader() {
             </a>
           </nav>
 
-          {/* 手机：从左到右 = Anify | 下拉菜单 | Play */}
-          <div className="ml-auto flex flex-shrink-0 items-center gap-1.5 md:hidden">
+          {/* 手机：左菜单 | 中 Anify（= 回顶部）| 右 Play */}
+          <div className="relative flex w-full min-h-8 items-center gap-2 md:hidden">
             <button
               type="button"
-              className="flex h-7 w-7 flex-col items-center justify-center gap-0.5 rounded-md border border-amber-200/22 bg-amber-400/10 text-amber-100"
+              className="flex h-8 w-8 shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-amber-200/18 bg-amber-400/10 text-amber-100"
               aria-expanded={menuOpen}
-              aria-label="Menu"
+              aria-label="打开导航"
               onClick={() => setMenuOpen((o) => !o)}
             >
-              <span className="block h-0.5 w-3 rounded-full bg-current" />
-              <span className="block h-0.5 w-3 rounded-full bg-current" />
-              <span className="block h-0.5 w-3 rounded-full bg-current" />
+              <span className="block h-0.5 w-3.5 rounded-full bg-current" />
+              <span className="block h-0.5 w-3.5 rounded-full bg-current" />
+              <span className="block h-0.5 w-3.5 rounded-full bg-current" />
             </button>
+
+            <div className="flex min-w-0 flex-1 justify-center px-1">
+              <AnifyHomeLink
+                className={`text-base ${anifyWordmarkClass} shrink-0 text-center`}
+              />
+            </div>
+
             <a
               href="#play"
-              className={playGoldClass}
+              className={`${playGoldClass} shrink-0 whitespace-nowrap`}
               onClick={(e) => {
                 e.preventDefault();
                 smoothNavScrollToHash("#play");
@@ -108,23 +132,12 @@ export function SiteHeader() {
             className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-[101] rounded-2xl bg-gradient-to-b from-amber-200/20 to-amber-400/10 p-3 shadow-lg backdrop-blur-md md:hidden"
             style={{ WebkitBackdropFilter: "blur(14px)" }}
           >
-            <nav className="flex flex-col gap-0.5" aria-label="Section">
-              <a
-                href="#hero"
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-white/90"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMenuOpen(false);
-                  smoothNavScrollToHash("#hero");
-                }}
-              >
-                Home
-              </a>
+            <nav className="flex flex-col gap-0.5" aria-label="页面章节">
               {NAV_PLAIN.map(({ href, label }) => (
                 <a
                   key={href}
                   href={href}
-                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-white/90"
+                  className="rounded-lg px-3 py-3 text-[0.95rem] font-medium text-white/90 active:bg-white/10"
                   onClick={(e) => {
                     e.preventDefault();
                     setMenuOpen(false);
