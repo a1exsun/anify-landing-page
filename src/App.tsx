@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { FeaturesSection } from "@/components/FeaturesSection";
 import { HeroSection } from "@/components/HeroSection";
 import { HighlightsSection } from "@/components/HighlightsSection";
+import { PlayCtaSection } from "@/components/PlayCtaSection";
 import { RoadmapSection } from "@/components/RoadmapSection";
 import { SplatCanvas } from "@/components/SplatCanvas";
 import { ScrollAnimator } from "@/three/ScrollAnimator";
@@ -43,6 +44,7 @@ export default function App() {
         <FeaturesSection />
         <HighlightsSection />
         <RoadmapSection />
+        <PlayCtaSection />
       </div>
     </>
   );

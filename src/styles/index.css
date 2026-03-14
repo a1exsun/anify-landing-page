@@ -133,3 +133,26 @@ select {
     0 1px 2px rgba(0, 0, 0, 0.25),
     0 2px 16px rgba(0, 0, 0, 0.2);
 }
+
+/* Play CTA — 仅图标上下浮动 */
+.play-cta-icon-float {
+  display: flex;
+  justify-content: center;
+  animation: play-cta-icon-float 3.2s ease-in-out infinite;
+}
+
+@keyframes play-cta-icon-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-cta-icon-float {
+    animation: none;
+  }
+}
