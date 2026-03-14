@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-const PLAY_URL = "https://anify.ai";
-
 const NAV = [
   { href: "#features", label: "Features" },
   { href: "#highlights", label: "Highlights" },
@@ -68,9 +66,7 @@ export function SiteHeader() {
             <span className="block h-0.5 w-3 rounded-full bg-current" />
           </button>
           <a
-            href={PLAY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#play"
             className="inline-flex items-center justify-center rounded-lg bg-gradient-to-b from-amber-300 to-amber-600 px-2.5 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-[#1a1208] shadow-[0_0_12px_-2px_rgba(251,191,36,0.45)] transition-transform hover:scale-[1.02] active:scale-[0.98] md:px-3 md:py-1.5"
           >
             Start game
@@ -101,6 +97,13 @@ export function SiteHeader() {
                 {label}
               </a>
             ))}
+            <a
+              href="#play"
+              className="mt-1 rounded-lg bg-gradient-to-b from-amber-300 to-amber-600 px-3 py-2.5 text-center text-sm font-semibold text-[#1a1208]"
+              onClick={() => setMenuOpen(false)}
+            >
+              Start game
+            </a>
           </nav>
         </div>
       ) : null}

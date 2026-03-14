@@ -150,6 +150,29 @@ select {
   animation: play-cta-icon-float 3.2s ease-in-out infinite;
 }
 
+/* Play CTA：新背景全屏，图标区域先做“镂空透旧背景”再闭合 */
+.play-cta-cutout-bg {
+  --play-cutout-size: 320px;
+  --play-cutout-x: calc(50% - 160px);
+  --play-cutout-y: calc(30% - 160px);
+
+  -webkit-mask-image:
+    linear-gradient(#fff 0 0),
+    url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cpath%20fill='white'%20d='M41.4%2064.6a8.33%208.33%200%200%200-6-6L9.9%2052a2.08%202.08%200%200%201%200-4l25.5-6.6a8.33%208.33%200%200%200%206-6L48%2010a2.08%202.08%200%200%201%204%200l6.6%2025.5a8.33%208.33%200%200%200%206%206L90.1%2048a2.08%202.08%200%200%201%200%204l-25.5%206.6a8.33%208.33%200%200%200-6%206L52%2090a2.08%202.08%200%200%201-4%200z'/%3E%3Crect%20x='78'%20y='7'%20width='6'%20height='20'%20fill='white'/%3E%3Crect%20x='71'%20y='14'%20width='20'%20height='6'%20fill='white'/%3E%3Crect%20x='10'%20y='72'%20width='4'%20height='14'%20fill='white'/%3E%3Crect%20x='5'%20y='77'%20width='14'%20height='4'%20fill='white'/%3E%3C/svg%3E\");
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  -webkit-mask-size: 100% 100%, var(--play-cutout-size) var(--play-cutout-size);
+  -webkit-mask-position: 0 0, var(--play-cutout-x) var(--play-cutout-y);
+  -webkit-mask-composite: xor;
+
+  mask-image:
+    linear-gradient(#fff 0 0),
+    url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cpath%20fill='white'%20d='M41.4%2064.6a8.33%208.33%200%200%200-6-6L9.9%2052a2.08%202.08%200%200%201%200-4l25.5-6.6a8.33%208.33%200%200%200%206-6L48%2010a2.08%202.08%200%200%201%204%200l6.6%2025.5a8.33%208.33%200%200%200%206%206L90.1%2048a2.08%202.08%200%200%201%200%204l-25.5%206.6a8.33%208.33%200%200%200-6%206L52%2090a2.08%202.08%200%200%201-4%200z'/%3E%3Crect%20x='78'%20y='7'%20width='6'%20height='20'%20fill='white'/%3E%3Crect%20x='71'%20y='14'%20width='20'%20height='6'%20fill='white'/%3E%3Crect%20x='10'%20y='72'%20width='4'%20height='14'%20fill='white'/%3E%3Crect%20x='5'%20y='77'%20width='14'%20height='4'%20fill='white'/%3E%3C/svg%3E\");
+  mask-repeat: no-repeat, no-repeat;
+  mask-size: 100% 100%, var(--play-cutout-size) var(--play-cutout-size);
+  mask-position: 0 0, var(--play-cutout-x) var(--play-cutout-y);
+  mask-composite: exclude;
+}
+
 @keyframes play-cta-icon-float {
   0%,
   100% {
