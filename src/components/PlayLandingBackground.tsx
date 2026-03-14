@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 
-/** 与 anify-web MatrixGridBackground 同逻辑，供 Play CTA 全屏底 */
 interface FlowPoint {
   speed: number;
   axis: "h" | "v";

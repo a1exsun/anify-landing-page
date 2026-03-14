@@ -33,7 +33,6 @@ export class ScrollAnimator {
       trigger: scrollContainer,
       start: "top top",
       end: "bottom bottom",
-      /** 略加长滞后，长距离滚动时相机少「甩」 */
       scrub: 1.65,
       onUpdate: (self) => {
         this.updateCamera(self.progress);
@@ -48,10 +47,6 @@ export class ScrollAnimator {
   }
 
   private updateCamera(scrollProgress: number): void {
-    /**
-     * smoothstep：在整页首尾（对应路径第 1 / 最后一帧）附近降低对 progress 的灵敏度，
-     * 避免一切到顶/底就像相机「直接怼」到端点关键帧；中间段仍覆盖绝大部分路径。
-     */
     const t = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
     const { position, quaternion } = this.cameraPath.getPoseAt(t);
     this.camera.position.copy(position);

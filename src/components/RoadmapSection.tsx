@@ -62,7 +62,6 @@ export function RoadmapSection() {
       return;
     }
 
-    /* 与 Highlights/Features 同构：整段 scrub，强滑入 + 对称滑出 */
     const ease = (t: number) => t * t * (3 - 2 * t);
 
     const apply = (raw: number) => {

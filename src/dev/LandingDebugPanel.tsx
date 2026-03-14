@@ -1,5 +1,5 @@
 /**
- * ?debug=1：WASD 平移 + 左键拖拽转头；录 position+quaternion → 贴 CameraPath DEFAULT_KEYFRAMES
+ * ?debug=1 — WASD move, drag rotate; record poses → paste into CameraPath DEFAULT_KEYFRAMES
  */
 import { useCallback, useEffect, useState } from "react";
 
@@ -34,7 +34,7 @@ function save(m: Record<string, CameraKeyframeSerialized>): void {
   localStorage.setItem(STORAGE, JSON.stringify(m));
 }
 
-function serializePose(cam: THREE_PerspectiveCamera): CameraKeyframeSerialized {
+function serializePose(cam: PerspectiveCamera): CameraKeyframeSerialized {
   const p = cam.position;
   const q = cam.quaternion;
   return {
@@ -90,17 +90,15 @@ export function LandingDebugPanel({ scene }: { scene: SplatScene | null }) {
     )
     .join("\n");
 
-  const tsSnippet = `// 粘贴到 CameraPath.ts，替换 keyframesFromAngles 那一整行赋值：\nconst DEFAULT_KEYFRAMES: CameraKeyframeSerialized[] = [\n${lines}\n];`;
+  const tsSnippet = `// CameraPath.ts — replace DEFAULT_KEYFRAMES with:\nconst DEFAULT_KEYFRAMES: CameraKeyframeSerialized[] = [\n${lines}\n];`;
 
   return (
     <div className="fixed bottom-3 left-3 right-3 z-[200] max-h-[85vh] overflow-y-auto rounded-xl border border-emerald-500/50 bg-zinc-950/96 p-3 font-mono text-[10px] text-emerald-100 shadow-2xl backdrop-blur-sm sm:left-auto sm:right-3 sm:max-w-[24rem]">
-      <div className="mb-1 font-bold text-emerald-300">Debug 相机</div>
+      <div className="mb-1 font-bold text-emerald-300">Debug camera</div>
       <p className="mb-2 leading-snug text-emerald-200/85">
-        <strong>WASD</strong> 前后左右 · <strong>Q/E</strong> 下/上 ·{" "}
-        <strong>左键拖拽</strong> 转头。跳段后摆好姿势点 <strong>录</strong>，最后{" "}
-        <strong>复制 TS</strong>，打开 CameraPath 把{" "}
-        <code className="text-white">DEFAULT_KEYFRAMES</code> 整段换成导出内容（保留{" "}
-        <code className="text-white">keyframesFromAngles</code> 可删或留作参考）。
+        <strong>WASD</strong> move · <strong>Q/E</strong> down/up · <strong>drag</strong> rotate.
+        Jump to a section, pose, <strong>Rec</strong>, then <strong>Copy TS</strong> into{" "}
+        <code className="text-white">CameraPath.ts</code> (<code className="text-white">DEFAULT_KEYFRAMES</code>).
       </p>
       {cam && ready ? (
         <div className="mb-2 rounded border border-white/10 bg-black/50 p-2 text-amber-200/90">
@@ -111,7 +109,7 @@ export function LandingDebugPanel({ scene }: { scene: SplatScene | null }) {
           {cam.quaternion.z.toFixed(4)}, {cam.quaternion.w.toFixed(4)})
         </div>
       ) : (
-        <div className="mb-2 text-white/50">等场景加载…</div>
+        <div className="mb-2 text-white/50">Loading scene…</div>
       )}
       <div className="mb-2 flex flex-wrap gap-1">
         {SECTIONS.map(({ id, label }) => (
@@ -129,7 +127,7 @@ export function LandingDebugPanel({ scene }: { scene: SplatScene | null }) {
               className="rounded bg-emerald-700 px-1.5 py-0.5 hover:bg-emerald-600 disabled:opacity-40"
               onClick={() => record(id)}
             >
-              录
+              Rec
             </button>
           </div>
         ))}
@@ -143,7 +141,7 @@ export function LandingDebugPanel({ scene }: { scene: SplatScene | null }) {
           className="rounded bg-cyan-700 px-2 py-1 hover:bg-cyan-600"
           onClick={() => void navigator.clipboard.writeText(tsSnippet)}
         >
-          复制 TS
+          Copy TS
         </button>
         <button
           type="button"
@@ -153,7 +151,7 @@ export function LandingDebugPanel({ scene }: { scene: SplatScene | null }) {
             setRecorded({});
           }}
         >
-          清空录制
+          Clear
         </button>
       </div>
     </div>

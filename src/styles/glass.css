@@ -34,7 +34,7 @@
   z-index: 1;
 }
 
-/* 允许绝对定位条不被 .glass > * 盖成 relative */
+/* Accent bar: absolute under .glass children stacking */
 .glass > .roadmap-pillar-accent {
   position: absolute;
   z-index: 0;

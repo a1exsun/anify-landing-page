@@ -44,7 +44,6 @@ const headingStyle = {
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 const easeOutExpo = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
-/** 背景渐入：两头慢、中间匀，体感更「缓」 */
 const easeInOutQuad = (t: number) =>
   t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -83,10 +82,8 @@ export function PlayCtaSection() {
       const fromX = stageRect.width * 0.5;
       const fromY = stageRect.height * 0.5;
 
-      // 阶段 1：遮罩从“屏幕中心 + 全屏尺寸”缩到图标落位。
       const holeMoveT = easeOutExpo(clamp01(phase / 0.62));
       const holeCloseT = easeOutExpo(clamp01((phase - 0.62) / 0.16));
-      /* 图标 / 文案更早、更短区间拉满 */
       const iconRevealT = easeOutExpo(clamp01((phase - 0.36) / 0.09));
       const contentRevealT = easeOutExpo(clamp01((phase - 0.44) / 0.1));
 
@@ -103,7 +100,6 @@ export function PlayCtaSection() {
       bg.style.setProperty("--play-cutout-x", `${cutoutX}px`);
       bg.style.setProperty("--play-cutout-y", `${cutoutY}px`);
 
-      /* 黑色底 + canvas：整段慢慢铺滿，比图标晚很多才到 1 */
       const bgAlpha = easeInOutQuad(clamp01(phase / 0.94));
       gsap.set(bg, { opacity: bgAlpha });
       gsap.set(icon, {
@@ -153,12 +149,10 @@ export function PlayCtaSection() {
       ref={sectionRef}
       className="relative isolate w-full min-w-0"
     >
-      {/* 高度由 ScrollTrigger pinSpacing 撑开；勿再用 sticky，否则钉住结束前整屏会随父级滚出视口 */}
       <div
         ref={stageRef}
         className="flex min-h-[100dvh] w-full items-center justify-center overflow-hidden px-5 py-[max(3rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))] md:px-10 md:py-24"
       >
-        {/* Web landing 底 + 镂空遮罩：进入本段即开始 */}
         <div
           ref={bgRef}
           className="play-cta-cutout-bg pointer-events-none absolute inset-0 z-0 bg-[#0a0a0f] opacity-0"

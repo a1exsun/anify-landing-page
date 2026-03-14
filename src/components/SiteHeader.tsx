@@ -60,7 +60,6 @@ export function SiteHeader() {
             backdropFilter: "blur(14px) saturate(1.1)",
           }}
         >
-          {/* 桌面：左 Anify + 右导航（主流顶栏） */}
           <AnifyHomeLink
             className={`relative hidden shrink-0 text-[1.05rem] md:block ${anifyWordmarkClass}`}
           />
@@ -94,13 +93,12 @@ export function SiteHeader() {
             </a>
           </nav>
 
-          {/* 手机：左菜单 | 中 Anify（= 回顶部）| 右 Play */}
           <div className="relative flex w-full min-h-8 items-center gap-2 md:hidden">
             <button
               type="button"
               className="flex h-8 w-8 shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-amber-200/18 bg-amber-400/10 text-amber-100"
               aria-expanded={menuOpen}
-              aria-label="打开导航"
+              aria-label="Open menu"
               onClick={() => setMenuOpen((o) => !o)}
             >
               <span className="block h-0.5 w-3.5 rounded-full bg-current" />
@@ -132,7 +130,7 @@ export function SiteHeader() {
             className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-[101] rounded-2xl bg-gradient-to-b from-amber-200/20 to-amber-400/10 p-3 shadow-lg backdrop-blur-md md:hidden"
             style={{ WebkitBackdropFilter: "blur(14px)" }}
           >
-            <nav className="flex flex-col gap-0.5" aria-label="页面章节">
+            <nav className="flex flex-col gap-0.5" aria-label="Sections">
               {NAV_PLAIN.map(({ href, label }) => (
                 <a
                   key={href}

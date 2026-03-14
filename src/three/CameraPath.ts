@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-/** 与 LandingDebugPanel 导出一致，顺序 Hero→Features→Highlights→Roadmap→Play */
+/** Keyframe order: Hero → Features → Highlights → Roadmap → Play */
 export interface CameraKeyframeSerialized {
   px: number;
   py: number;
@@ -54,15 +54,5 @@ export class CameraPath {
       frac,
     );
     return { position, quaternion: q };
-  }
-
-  getPositionAt(t: number): THREE.Vector3 {
-    return this.getPoseAt(t).position;
-  }
-
-  getLookAtAt(t: number): THREE.Vector3 {
-    const { position, quaternion } = this.getPoseAt(t);
-    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(quaternion);
-    return position.clone().add(dir);
   }
 }

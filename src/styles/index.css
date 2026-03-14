@@ -51,7 +51,7 @@ body {
   min-height: 100vh;
 }
 
-/* 锚点滚动时避开固定头 */
+/* scroll-margin for fixed header */
 #hero,
 #features,
 #highlights,
@@ -60,7 +60,7 @@ body {
   scroll-margin-top: calc(3.25rem + env(safe-area-inset-top));
 }
 
-/* ?debug=1：事件穿到高斯 canvas；链接/按钮仍可点 */
+/* debug: pointer-events on scroll overlay; links still clickable */
 .landing-debug-scroll a,
 .landing-debug-scroll button,
 .landing-debug-scroll input,
@@ -105,7 +105,7 @@ select {
   font-family: var(--font-wordmark);
 }
 
-/* Roadmap：手机单列；桌面 flex 一行 nowrap，杜绝第三张换行「掉下去」 */
+/* Roadmap pillars: column mobile, single row desktop */
 [data-roadmap-pillars] {
   display: flex;
   flex-direction: column;
@@ -146,7 +146,7 @@ select {
   }
 }
 
-/* Roadmap 标题：无黑底，仅轻阴影保证亮背景可读 */
+/* Roadmap title readability on bright bg */
 .roadmap-hero-title {
   color: #f8fbff;
   text-shadow:
@@ -154,14 +154,14 @@ select {
     0 2px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Play CTA — 仅图标上下浮动 */
+/* Play CTA icon float */
 .play-cta-icon-float {
   display: flex;
   justify-content: center;
   animation: play-cta-icon-float 3.2s ease-in-out infinite;
 }
 
-/* Play CTA：新背景全屏，图标区域先做“镂空透旧背景”再闭合 */
+/* Play CTA: full-bleed bg + cutout mask to icon */
 .play-cta-cutout-bg {
   --play-cutout-size: 320px;
   --play-cutout-x: calc(50% - 160px);
