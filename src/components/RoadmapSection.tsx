@@ -100,7 +100,7 @@ export function RoadmapSection() {
         <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.32em] text-white/54">
           Roadmap
         </p>
-        <h2 className="mx-auto mb-8 max-w-3xl text-center text-3xl font-semibold leading-tight text-white md:text-4xl">
+        <h2 className="mx-auto mb-8 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl" style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
           The landing surface is just the first shell. The motion system can grow with the product.
         </h2>
 

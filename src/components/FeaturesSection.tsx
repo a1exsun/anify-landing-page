@@ -80,7 +80,7 @@ export function FeaturesSection() {
       <div ref={cardsRef} className="w-full max-w-xl space-y-4">
         <div className="mb-8 text-left md:text-right">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/52">Features</p>
-          <h2 className="mt-3 text-3xl font-semibold leading-tight text-white md:text-4xl">
+          <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl" style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
             Built to sell the atmosphere, not just list capabilities.
           </h2>
         </div>

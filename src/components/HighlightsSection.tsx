@@ -81,7 +81,7 @@ export function HighlightsSection() {
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-100/70">
           Highlights
         </p>
-        <h2 className="mt-5 max-w-md text-3xl font-semibold leading-tight text-white md:text-4xl">
+        <h2 className="mt-5 max-w-md text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl" style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
           A landing page that sells atmosphere before it starts listing features.
         </h2>
         <div className="mt-10 space-y-7">
