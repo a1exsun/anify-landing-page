@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { smoothNavScrollToHash } from "@/lib/smoothNavScroll";
+
 const NAV = [
   { href: "#features", label: "Features" },
   { href: "#highlights", label: "Highlights" },
@@ -34,6 +36,10 @@ export function SiteHeader() {
           href="#hero"
           className="font-wordmark relative shrink-0 text-base font-semibold leading-none text-white md:text-[1.05rem]"
           style={{ letterSpacing: "0.02em" }}
+          onClick={(e) => {
+            e.preventDefault();
+            smoothNavScrollToHash("#hero");
+          }}
         >
           Anify
         </a>
@@ -47,6 +53,10 @@ export function SiteHeader() {
               key={href}
               href={href}
               className="rounded-md px-2 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-white/78 transition-colors hover:bg-amber-400/12 hover:text-amber-50 md:px-2.5"
+              onClick={(e) => {
+                e.preventDefault();
+                smoothNavScrollToHash(href);
+              }}
             >
               {label}
             </a>
@@ -68,6 +78,10 @@ export function SiteHeader() {
           <a
             href="#play"
             className="inline-flex items-center justify-center rounded-lg bg-gradient-to-b from-amber-300 to-amber-600 px-2.5 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-[#1a1208] shadow-[0_0_12px_-2px_rgba(251,191,36,0.45)] transition-transform hover:scale-[1.02] active:scale-[0.98] md:px-3 md:py-1.5"
+            onClick={(e) => {
+              e.preventDefault();
+              smoothNavScrollToHash("#play");
+            }}
           >
             Start game
           </a>
@@ -83,7 +97,11 @@ export function SiteHeader() {
             <a
               href="#hero"
               className="rounded-lg px-3 py-2.5 text-sm font-medium text-white/90"
-              onClick={() => setMenuOpen(false)}
+              onClick={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                smoothNavScrollToHash("#hero");
+              }}
             >
               Home
             </a>
@@ -92,7 +110,11 @@ export function SiteHeader() {
                 key={href}
                 href={href}
                 className="rounded-lg px-3 py-2.5 text-sm font-medium text-white/90"
-                onClick={() => setMenuOpen(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMenuOpen(false);
+                  smoothNavScrollToHash(href);
+                }}
               >
                 {label}
               </a>
@@ -100,7 +122,11 @@ export function SiteHeader() {
             <a
               href="#play"
               className="mt-1 rounded-lg bg-gradient-to-b from-amber-300 to-amber-600 px-3 py-2.5 text-center text-sm font-semibold text-[#1a1208]"
-              onClick={() => setMenuOpen(false)}
+              onClick={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                smoothNavScrollToHash("#play");
+              }}
             >
               Start game
             </a>
