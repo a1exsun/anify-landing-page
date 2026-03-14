@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { HighlightsSection } from "@/components/HighlightsSection";
 import { PlayCtaSection } from "@/components/PlayCtaSection";
 import { RoadmapSection } from "@/components/RoadmapSection";
+import { SiteHeader } from "@/components/SiteHeader";
 import { SplatCanvas } from "@/components/SplatCanvas";
 import { ScrollAnimator } from "@/three/ScrollAnimator";
 import type { SplatScene } from "@/three/SplatScene";
@@ -36,6 +37,7 @@ export default function App() {
   return (
     <>
       <SplatCanvas onSceneReady={handleSceneReady} />
+      <SiteHeader />
       <div
         ref={scrollRef}
         className="relative z-10"

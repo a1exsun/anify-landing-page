@@ -96,6 +96,7 @@ export function RoadmapSection() {
 
   return (
     <section
+      id="roadmap"
       ref={sectionRef}
       className="relative flex w-full min-w-0 min-h-[100dvh] items-start justify-center px-4 pb-16 pt-[max(2rem,env(safe-area-inset-top))] sm:px-5 md:min-h-screen md:items-start md:px-10 md:pb-24 md:pt-[min(12vh,7rem)] lg:px-14"
     >

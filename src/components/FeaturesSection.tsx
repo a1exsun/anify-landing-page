@@ -73,6 +73,7 @@ export function FeaturesSection() {
 
   return (
     <section
+      id="features"
       ref={sectionRef}
       className="relative box-border flex h-[100svh] max-h-[100svh] min-h-[100svh] items-stretch justify-end overflow-hidden px-4 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-8 md:px-12 lg:px-16"
     >

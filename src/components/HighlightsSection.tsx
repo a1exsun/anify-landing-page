@@ -102,6 +102,7 @@ export function HighlightsSection() {
 
   return (
     <section
+      id="highlights"
       ref={sectionRef}
       className="relative flex min-h-screen w-full items-center justify-center px-4 py-20 sm:px-6 md:px-10 lg:px-14 xl:px-20"
     >

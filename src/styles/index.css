@@ -51,6 +51,15 @@ body {
   min-height: 100vh;
 }
 
+/* 锚点滚动时避开固定头 */
+#hero,
+#features,
+#highlights,
+#roadmap,
+#play {
+  scroll-margin-top: calc(3.25rem + env(safe-area-inset-top));
+}
+
 * {
   box-sizing: border-box;
 }

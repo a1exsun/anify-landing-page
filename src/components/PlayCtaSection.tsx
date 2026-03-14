@@ -5,7 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PLAY_URL = "https://preview.anify.ai/";
+const PLAY_URL = "https://anify.ai";
 
 function LandingSparkles({ className }: { className?: string }) {
   return (
