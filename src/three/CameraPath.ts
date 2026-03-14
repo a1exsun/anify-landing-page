@@ -1,29 +1,30 @@
 import * as THREE from "three";
 
 interface CameraPathConfig {
-  lookAtPoints: THREE.Vector3[];
-  positionPoints: THREE.Vector3[];
+  angles: number[];
+  lookAtPoints?: THREE.Vector3[];
 }
 
+const HOME_GAUSS_ORBIT_PIVOT = new THREE.Vector3(0, 0, 0);
+const HOME_GAUSS_ORBIT_RADIUS = 1.2;
+
+// Mirrors the homepage orbit system instead of using ad-hoc 3D points.
+// The intermediate angles are derived from the main app's page offsets so
+// the landing page scroll follows the same camera language.
 const DEFAULT_CONFIG: CameraPathConfig = {
-  positionPoints: [
-    new THREE.Vector3(0, 0.5, 3),
-    new THREE.Vector3(2.1, 0.8, 2.1),
-    new THREE.Vector3(3.2, 1.1, 0.2),
-    new THREE.Vector3(2.1, 1.35, -2.2),
-    new THREE.Vector3(0, 0.5, 3),
-  ],
-  lookAtPoints: [
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0.2, 0.15, 0),
-    new THREE.Vector3(0.1, 0.3, -0.1),
-    new THREE.Vector3(0, 0.45, 0),
-    new THREE.Vector3(0, 0, 0),
-  ],
+  angles: [0, 1.3, 2.5, 4.45, 6.05],
 };
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
+}
+
+function createOrbitPoint(angle: number, radius: number): THREE.Vector3 {
+  return new THREE.Vector3(
+    HOME_GAUSS_ORBIT_PIVOT.x + radius * Math.sin(angle),
+    HOME_GAUSS_ORBIT_PIVOT.y,
+    HOME_GAUSS_ORBIT_PIVOT.z + radius * Math.cos(angle),
+  );
 }
 
 export class CameraPath {
@@ -36,17 +37,14 @@ export class CameraPath {
       ("ontouchstart" in window || navigator.maxTouchPoints > 0) &&
       window.innerWidth <= 1024;
 
-    const positionPoints = isMobile
-      ? config.positionPoints.map((point) => point.clone().multiplyScalar(mobileDistanceScale))
-      : config.positionPoints.map((point) => point.clone());
+    const orbitRadius = HOME_GAUSS_ORBIT_RADIUS * (isMobile ? mobileDistanceScale : 1);
+    const positionPoints = config.angles.map((angle) => createOrbitPoint(angle, orbitRadius));
+    const lookAtPoints =
+      config.lookAtPoints?.map((point) => point.clone()) ??
+      config.angles.map(() => HOME_GAUSS_ORBIT_PIVOT.clone());
 
     this.positionCurve = new THREE.CatmullRomCurve3(positionPoints, false, "catmullrom", 0.5);
-    this.lookAtCurve = new THREE.CatmullRomCurve3(
-      config.lookAtPoints.map((point) => point.clone()),
-      false,
-      "catmullrom",
-      0.5,
-    );
+    this.lookAtCurve = new THREE.CatmullRomCurve3(lookAtPoints, false, "catmullrom", 0.5);
   }
 
   getPositionAt(t: number): THREE.Vector3 {
