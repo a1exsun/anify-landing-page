@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
+import { NavContext } from "@/App";
 import { smoothNavScrollToHash } from "@/lib/smoothNavScroll";
 
 const NAV_PLAIN = [
@@ -20,9 +21,11 @@ const anifyWordmarkClass =
 function AnifyHomeLink({
   className,
   onNavigate,
+  scrollToSection,
 }: {
   className?: string;
   onNavigate?: () => void;
+  scrollToSection: (hash: string) => void;
 }) {
   return (
     <a
@@ -32,7 +35,7 @@ function AnifyHomeLink({
       onClick={(e) => {
         e.preventDefault();
         onNavigate?.();
-        smoothNavScrollToHash("#hero");
+        scrollToSection("#hero");
       }}
     >
       Anify
@@ -42,6 +45,8 @@ function AnifyHomeLink({
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigateToSection = useContext(NavContext);
+  const scrollTo = navigateToSection ?? smoothNavScrollToHash;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -62,6 +67,7 @@ export function SiteHeader() {
         >
           <AnifyHomeLink
             className={`relative hidden shrink-0 text-[1.05rem] md:block ${anifyWordmarkClass}`}
+            scrollToSection={scrollTo}
           />
 
           <nav
@@ -75,7 +81,7 @@ export function SiteHeader() {
                 className={navLinkClass}
                 onClick={(e) => {
                   e.preventDefault();
-                  smoothNavScrollToHash(href);
+                  scrollTo(href);
                 }}
               >
                 {label}
@@ -86,7 +92,7 @@ export function SiteHeader() {
               className={playGoldClass}
               onClick={(e) => {
                 e.preventDefault();
-                smoothNavScrollToHash("#play");
+                scrollTo("#play");
               }}
             >
               Play
@@ -109,6 +115,7 @@ export function SiteHeader() {
             <div className="flex min-w-0 flex-1 justify-center px-1">
               <AnifyHomeLink
                 className={`text-base ${anifyWordmarkClass} shrink-0 text-center`}
+                scrollToSection={scrollTo}
               />
             </div>
 
@@ -117,7 +124,7 @@ export function SiteHeader() {
               className={`${playGoldClass} shrink-0 whitespace-nowrap`}
               onClick={(e) => {
                 e.preventDefault();
-                smoothNavScrollToHash("#play");
+                scrollTo("#play");
               }}
             >
               Play
@@ -139,7 +146,7 @@ export function SiteHeader() {
                   onClick={(e) => {
                     e.preventDefault();
                     setMenuOpen(false);
-                    smoothNavScrollToHash(href);
+                    scrollTo(href);
                   }}
                 >
                   {label}

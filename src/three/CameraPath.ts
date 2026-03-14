@@ -12,7 +12,7 @@ export interface CameraKeyframeSerialized {
 }
 
 const DEFAULT_KEYFRAMES: CameraKeyframeSerialized[] = [
-  { px: 0.0000, py: 0.2000, pz: 1.3500, qx: 0.00000, qy: 0.00000, qz: 0.00000, qw: 1.00000 },
+  { px: 0.0000, py: 0.2000, pz: 0.7908, qx: -0.02832, qy: -0.02947, qz: -0.00084, qw: 0.99916 },
   { px: -0.8330, py: 0.2099, pz: -1.4958, qx: 0.00127, qy: -0.30188, qz: 0.00040, qw: 0.95334 },
   { px: -0.1344, py: 0.1185, pz: -2.1326, qx: -0.01973, qy: -0.82174, qz: -0.02850, qw: 0.56880 },
   { px: -0.9445, py: 0.0981, pz: -2.5666, qx: 0.00266, qy: -0.95836, qz: 0.00894, qw: 0.28543 },

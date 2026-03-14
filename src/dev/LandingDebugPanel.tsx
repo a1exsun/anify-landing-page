@@ -1,8 +1,9 @@
 /**
  * ?debug=1 — WASD move, drag rotate; record poses → paste into CameraPath DEFAULT_KEYFRAMES
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
+import { NavContext } from "@/App";
 import { smoothNavScrollToHash } from "@/lib/smoothNavScroll";
 import type { PerspectiveCamera } from "three";
 
@@ -52,6 +53,7 @@ export function LandingDebugPanel({ scene }: { scene: SplatScene | null }) {
   const [recorded, setRecorded] = useState<Record<string, CameraKeyframeSerialized>>(load);
   const [, tick] = useState(0);
   const refresh = useCallback(() => tick((n) => n + 1), []);
+  const navigateToSection = useContext(NavContext);
 
   useEffect(() => {
     const id = setInterval(refresh, 100);
@@ -117,7 +119,7 @@ export function LandingDebugPanel({ scene }: { scene: SplatScene | null }) {
             <button
               type="button"
               className="rounded bg-white/10 px-1.5 py-0.5 hover:bg-white/20"
-              onClick={() => smoothNavScrollToHash(`#${id}`)}
+              onClick={() => (navigateToSection ?? smoothNavScrollToHash)(`#${id}`)}
             >
               {label}
             </button>
