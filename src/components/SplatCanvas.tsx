@@ -1,8 +1,9 @@
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SplatScene } from "@/three/SplatScene";
 
-const DEFAULT_SPLAT_URL = "https://oss.anify.ai/gs/3b5320a4-72b4-4eb4-98fe-13c78ae1c070_ceramic_500k.spz";
+const DEFAULT_SPLAT_URL =
+  "https://oss.anify.ai/gs/3b5320a4-72b4-4eb4-98fe-13c78ae1c070_ceramic_500k.spz";
 const FALLBACK_GRADIENT = "linear-gradient(135deg, #0a0a1a, #1a1a2e)";
 
 interface SplatCanvasProps {
@@ -10,19 +11,13 @@ interface SplatCanvasProps {
   splatUrl?: string;
 }
 
-export function SplatCanvas({ onSceneReady, splatUrl = DEFAULT_SPLAT_URL }: SplatCanvasProps) {
+export function SplatCanvas({
+  splatUrl = DEFAULT_SPLAT_URL,
+  onSceneReady,
+}: SplatCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const readyRef = useRef(false);
-  const [error, setError] = useState(false);
-
-  const handleSceneReady = useEffectEvent((scene: SplatScene) => {
-    if (readyRef.current) {
-      return;
-    }
-
-    readyRef.current = true;
-    onSceneReady?.(scene);
-  });
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -30,26 +25,34 @@ export function SplatCanvas({ onSceneReady, splatUrl = DEFAULT_SPLAT_URL }: Spla
       return;
     }
 
-    readyRef.current = false;
-    setError(false);
-
     const scene = new SplatScene();
-    scene.onError(() => setError(true));
-    scene.onLoad(() => handleSceneReady(scene));
+    readyRef.current = false;
+    setHasError(false);
+
+    scene.onError(() => {
+      setHasError(true);
+    });
+    scene.onLoad(() => {
+      if (readyRef.current) {
+        return;
+      }
+
+      readyRef.current = true;
+      onSceneReady?.(scene);
+    });
     scene.init(container, splatUrl);
-    handleSceneReady(scene);
 
     return () => {
-      scene.dispose();
       readyRef.current = false;
+      scene.dispose();
     };
-  }, [handleSceneReady, splatUrl]);
+  }, [onSceneReady, splatUrl]);
 
   return (
     <div
       ref={containerRef}
       className="fixed inset-0 z-0"
-      style={error ? { background: FALLBACK_GRADIENT } : undefined}
+      style={hasError ? { background: FALLBACK_GRADIENT } : undefined}
     />
   );
 }
