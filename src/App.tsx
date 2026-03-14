@@ -40,8 +40,8 @@ export default function App() {
         className="relative z-10"
       >
         <HeroSection />
-        <HighlightsSection />
         <FeaturesSection />
+        <HighlightsSection />
         <RoadmapSection />
       </div>
     </>

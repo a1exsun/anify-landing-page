@@ -8,24 +8,28 @@ gsap.registerPlugin(ScrollTrigger);
 
 const FEATURES = [
   {
-    code: "SYNC",
-    name: "Scene-aware interface",
-    description: "Each content block leaves space for the 3D world instead of covering it edge to edge.",
+    id: "ai",
+    name: "AI companion",
+    description:
+      "Agents stay with you across sessions—memory and dialogue tied to who you are here. Companions and rivals can call back what actually happened, not a reset chat box.",
   },
   {
-    code: "PATH",
-    name: "Camera guided by page depth",
-    description: "A CatmullRom path keeps the camera drift smooth and deliberate across four full-screen sections.",
+    id: "adv",
+    name: "Adventure",
+    description:
+      "Campaign-style beats: branching objectives and rising stakes so every run has somewhere to go. Exploration and story pull in the same direction.",
   },
   {
-    code: "LOAD",
-    name: "Progressive splat loading",
-    description: "Preview and final-quality meshes swap through a radial reveal rather than a hard visual cut.",
+    id: "cmb",
+    name: "Combat",
+    description:
+      "Fights happen where you already are—same space, same context. When talk ends, tension has a cost; outcomes feed the next leg of the road.",
   },
   {
-    code: "MOBILE",
-    name: "Performance-aware fallback",
-    description: "Old iOS devices degrade blur and render density so the page stays stable instead of collapsing.",
+    id: "town",
+    name: "Town exploration",
+    description:
+      "Hubs you revisit—shops, boards, guilds, NPC rhythms that shift as you progress. A base that grows with you, not a one-off backdrop.",
   },
 ];
 
@@ -48,23 +52,18 @@ export function FeaturesSection() {
     }
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        cardElements,
-        { opacity: 0, x: 88, y: 20 },
-        {
-          opacity: 1,
-          x: 0,
-          y: 0,
-          ease: "none",
-          stagger: 0.12,
-          scrollTrigger: {
-            trigger: section,
-            start: "top 72%",
-            end: "center 50%",
-            scrub: 0.8,
-          },
+      gsap.from(cardElements, {
+        y: 16,
+        opacity: 0.94,
+        duration: 0.4,
+        stagger: 0.05,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: section,
+          start: "top 78%",
+          toggleActions: "play none none none",
         },
-      );
+      });
     }, section);
 
     return () => {
@@ -75,30 +74,46 @@ export function FeaturesSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative flex min-h-screen items-center justify-end px-5 py-16 md:px-12 lg:px-18"
+      className="relative box-border flex h-[100svh] max-h-[100svh] min-h-[100svh] items-stretch justify-end overflow-hidden px-4 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-8 md:px-12 lg:px-16"
     >
-      <div ref={cardsRef} className="w-full max-w-xl space-y-4">
-        <div className="mb-8 text-left md:text-right">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/52">Features</p>
-          <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl" style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
-            Built to sell the atmosphere, not just list capabilities.
-          </h2>
-        </div>
-        {FEATURES.map((feature) => (
-          <article
-            key={feature.code}
-            data-feature-card
-            className={`${glassClass} glass-card flex items-start gap-4 opacity-0`}
+      <div
+        ref={cardsRef}
+        className="ml-auto flex h-full w-full max-w-xl flex-col lg:max-w-2xl"
+      >
+        <header className="shrink-0 pt-2 text-right md:pt-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-100/70 sm:text-[0.8rem]">
+            Features
+          </p>
+          <h2
+            className="mt-3 max-w-xl text-2xl font-semibold leading-[1.15] tracking-tight text-white sm:mt-4 sm:text-3xl md:ml-auto md:text-[1.75rem] md:leading-[1.12] lg:text-4xl lg:leading-[1.1]"
+            style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}
           >
-            <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/12 bg-black/18 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#d7e7ff]">
-              {feature.code}
-            </div>
-            <div className="relative z-10">
-              <h3 className="text-lg font-medium text-white">{feature.name}</h3>
-              <p className="mt-2 max-w-sm text-sm leading-7 text-white/70 md:text-[0.95rem]">{feature.description}</p>
-            </div>
-          </article>
-        ))}
+            Forge bonds in the tavern, legends in the fray.
+          </h2>
+        </header>
+
+        <div className="mt-4 flex min-h-0 flex-1 flex-col gap-2 sm:mt-5 sm:gap-2.5 md:gap-3 lg:mt-6 lg:gap-4">
+          {FEATURES.map((feature) => (
+            <article
+              key={feature.id}
+              data-feature-card
+              className={`${glassClass} flex min-h-0 flex-1 basis-0 items-center gap-3 rounded-2xl border border-white/10 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 md:px-6`}
+            >
+              <div
+                className="h-11 w-11 shrink-0 rounded-xl border border-white/14 bg-white/[0.07] sm:h-12 sm:w-12 md:h-14 md:w-14"
+                aria-hidden
+              />
+              <div className="min-w-0 flex-1 py-0.5">
+                <h3 className="text-lg font-medium text-white sm:text-xl">
+                  {feature.name}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/70 sm:mt-2 sm:text-[0.95rem] md:text-base md:leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
