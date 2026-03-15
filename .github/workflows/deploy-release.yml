@@ -26,6 +26,17 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Check Cloudflare secrets
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it in GitHub: Settings → Secrets and variables → Actions (or in Environment '${{ github.ref_name }}' → Environment secrets). Create a token at https://developers.cloudflare.com/fundamentals/api/get-started/create-token/"
+            exit 1
+          fi
+          if [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "::error::CLOUDFLARE_ACCOUNT_ID is not set. Add it in the same place as CLOUDFLARE_API_TOKEN. Find it in Cloudflare Dashboard → Workers & Pages → Overview."
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
