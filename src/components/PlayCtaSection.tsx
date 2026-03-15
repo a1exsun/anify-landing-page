@@ -7,7 +7,7 @@ import { PlayLandingBackground } from "@/components/PlayLandingBackground";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PLAY_URL = "https://anify.ai";
+const PLAY_URL = "https://preview.anify.ai/";
 
 function LandingSparkles({ className }: { className?: string }) {
   return (

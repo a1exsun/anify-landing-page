@@ -11,19 +11,17 @@ import { getGlassClass } from "@/utils/useGlassFallback";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const featureImageGlob = import.meta.glob<{ default: string }>(
-  "@/assets/*.png",
-  { eager: true },
-);
-const FEATURE_IMAGES: Record<string, string> = {};
-const FEAT_KEYS = ["ai", "adv", "cmb", "town"];
-for (const p of Object.keys(featureImageGlob)) {
-  const name = p.split(/[/\\]/).pop()?.replace(/\.png$/i, "")?.toLowerCase() ?? "";
-  const mod = featureImageGlob[p];
-  if (FEAT_KEYS.includes(name) && mod) {
-    FEATURE_IMAGES[name] = mod.default;
-  }
-}
+import aiImg from "@/assets/ai.png";
+import advImg from "@/assets/adv.png";
+import cmbImg from "@/assets/cmb.png";
+import townImg from "@/assets/town.png";
+
+const FEATURE_IMAGES: Record<string, string> = {
+  ai: aiImg,
+  adv: advImg,
+  cmb: cmbImg,
+  town: townImg,
+};
 
 const FEATURES = [
   {
