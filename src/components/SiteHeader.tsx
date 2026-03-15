@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 
 import { NavContext } from "@/App";
+import logoImg from "@/assets/ANIFY_logo.png";
 import { smoothNavScrollToHash } from "@/lib/smoothNavScroll";
 
 const NAV_PLAIN = [
@@ -31,14 +32,18 @@ function AnifyHomeLink({
     <a
       href="#hero"
       className={className}
-      style={{ letterSpacing: "0.02em" }}
       onClick={(e) => {
         e.preventDefault();
         onNavigate?.();
         scrollToSection("#hero");
       }}
+      aria-label="Anify"
     >
-      Anify
+      <img
+        src={logoImg}
+        alt=""
+        className="h-6 w-auto object-contain md:h-7"
+      />
     </a>
   );
 }

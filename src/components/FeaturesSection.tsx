@@ -3,6 +3,10 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { PinRangeContext } from "@/App";
+import {
+  getFeaturesFirstFeatScrollY,
+  setFeaturesFirstFeatScrollY,
+} from "@/lib/smoothNavScroll";
 import { getGlassClass } from "@/utils/useGlassFallback";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -49,6 +53,8 @@ function easeSmooth(t: number): number {
 
 const PIN_DURATION = "280%";
 const FADE_AFTER_PIN_VH = 0.28;
+/** Pin progress at which first card (AI companion) is fully visible in carousel. */
+const FIRST_FEAT_PROGRESS = 0.28;
 
 export function FeaturesSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -155,10 +161,16 @@ export function FeaturesSection() {
       scrub: 0.9,
       onUpdate: (self) => {
         if (setPinRange) setPinRange(self.start, self.end);
+        setFeaturesFirstFeatScrollY(
+          self.start + FIRST_FEAT_PROGRESS * (self.end - self.start),
+        );
         apply(self.progress);
       },
     });
     if (setPinRange) setPinRange(pinSt.start, pinSt.end);
+    setFeaturesFirstFeatScrollY(
+      pinSt.start + FIRST_FEAT_PROGRESS * (pinSt.end - pinSt.start),
+    );
 
     const fadeAfterPx = typeof window !== "undefined" ? window.innerHeight * FADE_AFTER_PIN_VH : 200;
     const fadeSt = ScrollTrigger.create({
@@ -175,10 +187,40 @@ export function FeaturesSection() {
       },
     });
 
+    let snappedFromEnd = false;
+    const snapZoneSt = ScrollTrigger.create({
+      trigger: document.body,
+      start: () => pinSt.end - 80,
+      end: () => pinSt.end + fadeAfterPx + 80,
+      onUpdate: (self) => {
+        const sy = window.scrollY;
+        const end = pinSt.end;
+        const fadeEnd = end + fadeAfterPx;
+        if (self.direction === -1 && sy >= end && sy <= fadeEnd) {
+          if (!snappedFromEnd) {
+            snappedFromEnd = true;
+            const firstFeatY = getFeaturesFirstFeatScrollY();
+            if (firstFeatY != null) {
+              gsap.killTweensOf(window);
+              gsap.to(window, {
+                duration: 0.6,
+                scrollTo: { y: firstFeatY, autoKill: true },
+                ease: "power2.out",
+              });
+            }
+          }
+        }
+        if (sy < pinSt.start - 50) snappedFromEnd = false;
+        if (sy > fadeEnd + 80) snappedFromEnd = false;
+      },
+    });
+
     requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
       if (clearPinRange) clearPinRange();
+      setFeaturesFirstFeatScrollY(null);
+      snapZoneSt.kill();
       fadeSt.kill();
       pinSt.kill();
       gsap.set([track, cards], { clearProps: "opacity,transform,filter" });
@@ -190,14 +232,14 @@ export function FeaturesSection() {
     <section
       id="features"
       ref={sectionRef}
-      className="relative flex min-h-[100vh] w-full flex-col overflow-hidden px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-[max(calc(3.25rem+0.75rem+env(safe-area-inset-top)),env(safe-area-inset-top))] sm:px-6 sm:pt-[max(calc(3.25rem+1rem+env(safe-area-inset-top)),env(safe-area-inset-top))] md:px-8 md:pt-[max(calc(3.25rem+1.25rem+env(safe-area-inset-top)),env(safe-area-inset-top))] lg:px-10 lg:pt-[max(calc(3.25rem+1.5rem+env(safe-area-inset-top)),env(safe-area-inset-top))]"
+      className="relative flex min-h-[100vh] w-full flex-col overflow-hidden px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-[max(calc(3.25rem+2.5rem+env(safe-area-inset-top)),env(safe-area-inset-top))] sm:px-6 sm:pt-[max(calc(3.25rem+2rem+env(safe-area-inset-top)),env(safe-area-inset-top))] md:px-8 md:pt-[max(calc(3.25rem+1.5rem+env(safe-area-inset-top)),env(safe-area-inset-top))] lg:px-10 lg:pt-[max(calc(3.25rem+1.5rem+env(safe-area-inset-top)),env(safe-area-inset-top))]"
     >
-      <header className="relative z-10 shrink-0 pb-2 text-center sm:pb-2.5 md:pb-3">
+      <header className="relative z-10 shrink-0 pb-3 text-center sm:pb-2.5 md:pb-3">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-100/70 sm:text-[0.8rem]">
           Features
         </p>
         <h2
-          className="mx-auto mt-1.5 max-w-4xl text-xl font-semibold leading-tight tracking-tight text-white sm:mt-2 sm:text-2xl md:whitespace-nowrap md:text-[1.75rem] lg:text-3xl xl:text-4xl"
+          className="mx-auto mt-2.5 max-w-4xl text-xl font-semibold leading-tight tracking-tight text-white sm:mt-2 sm:text-2xl md:whitespace-nowrap md:text-[1.75rem] lg:text-3xl xl:text-4xl"
           style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}
         >
           Forge bonds in the tavern, legends in the fray.
@@ -218,6 +260,7 @@ export function FeaturesSection() {
                 ref={(el) => {
                   cardRefs.current[index] = el;
                 }}
+                {...(index === 0 ? { "data-first-feat": "" } : {})}
                 className="flex h-full shrink-0 flex-col overflow-hidden rounded-2xl border border-white/12 px-1 will-change-transform first:pl-0 last:pr-0 sm:px-1.5 md:px-2"
                 style={{ width: `${100 / CARD_COUNT}%` }}
               >

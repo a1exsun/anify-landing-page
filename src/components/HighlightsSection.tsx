@@ -12,7 +12,7 @@ const HIGHLIGHTS = [
     eyebrow: "Gaussian worlds",
     title: "Game-ready splat scenes—not just a backdrop.",
     description:
-      "3D Gaussian splatting turned into something you can play in: spatial, lit, and meant to stay with the run.",
+      "Game-ready 3D worlds built from Gaussian splats. Spatial, lit, and interactive scenes that move beyond passive backdrops.",
   },
   {
     eyebrow: "R3F + physics",

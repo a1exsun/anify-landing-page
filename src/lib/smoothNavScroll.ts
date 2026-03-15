@@ -12,13 +12,42 @@ export interface TargetScroll {
   duration: number;
 }
 
+const FEATURES_FIRST_CARD_TOP_PX = 24;
+
+let _featuresFirstFeatScrollY: number | null = null;
+
+/** Register scroll Y for "first feat (AI companion) fully visible" from FeaturesSection pin progress. */
+export function setFeaturesFirstFeatScrollY(y: number | null): void {
+  _featuresFirstFeatScrollY = y;
+}
+
+/** Target scroll Y so first feat card (AI companion) is fully in view (for nav and snap-from-below). */
+export function getFeaturesFirstFeatScrollY(): number | null {
+  if (_featuresFirstFeatScrollY != null) return _featuresFirstFeatScrollY;
+  const el = document.getElementById("features");
+  if (!el) return null;
+  const firstFeat = el.querySelector<HTMLElement>("[data-first-feat]");
+  if (firstFeat) {
+    return firstFeat.getBoundingClientRect().top + window.scrollY - FEATURES_FIRST_CARD_TOP_PX;
+  }
+  return el.getBoundingClientRect().top + window.scrollY;
+}
+
 /** Resolve hash to target scroll Y and duration (for direct nav or fallback). */
 export function getTargetScroll(hash: string): TargetScroll | null {
   const id = hash.replace(/^#/, "");
   const el = document.getElementById(id);
   if (!el) return null;
   const top = el.getBoundingClientRect().top + window.scrollY;
-  const y = id === "play" ? top + window.innerHeight * PLAY_PIN_VH : top;
+  let y: number;
+  if (id === "play") {
+    y = top + window.innerHeight * PLAY_PIN_VH;
+  } else if (id === "features") {
+    const firstFeatY = getFeaturesFirstFeatScrollY();
+    y = firstFeatY ?? top;
+  } else {
+    y = top;
+  }
   const duration = id === "play" ? 1.25 : 1.12;
   return { id, y, duration };
 }
