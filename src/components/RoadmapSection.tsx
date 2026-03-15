@@ -38,7 +38,7 @@ const PILLARS = [
     items: [
       { title: "Economy", line: "Shops, forging, guilds, co-op quests." },
       { title: "D20 in combat", line: "Rolls that matter in the fray." },
-      { title: "Self-host", line: "Your deploy, your OpenClaw." },
+      { title: "Self-host", line: "Your deploy, your control." },
     ],
   },
 ];

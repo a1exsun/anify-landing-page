@@ -11,6 +11,20 @@ import { getGlassClass } from "@/utils/useGlassFallback";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const featureImageGlob = import.meta.glob<{ default: string }>(
+  "@/assets/*.png",
+  { eager: true },
+);
+const FEATURE_IMAGES: Record<string, string> = {};
+const FEAT_KEYS = ["ai", "adv", "cmb", "town"];
+for (const p of Object.keys(featureImageGlob)) {
+  const name = p.split(/[/\\]/).pop()?.replace(/\.png$/i, "")?.toLowerCase() ?? "";
+  const mod = featureImageGlob[p];
+  if (FEAT_KEYS.includes(name) && mod) {
+    FEATURE_IMAGES[name] = mod.default;
+  }
+}
+
 const FEATURES = [
   {
     id: "ai",
@@ -261,17 +275,26 @@ export function FeaturesSection() {
                   cardRefs.current[index] = el;
                 }}
                 {...(index === 0 ? { "data-first-feat": "" } : {})}
-                className="flex h-full shrink-0 flex-col overflow-hidden rounded-2xl border border-white/12 px-1 will-change-transform first:pl-0 last:pr-0 sm:px-1.5 md:px-2"
+                className="flex h-full shrink-0 flex-col overflow-hidden rounded-2xl border border-white/12 px-1 will-change-transform sm:px-1.5 md:px-2"
                 style={{ width: `${100 / CARD_COUNT}%` }}
               >
                 <div
                   className={`${glassClass} flex h-full min-h-0 flex-col overflow-hidden border-0`}
                 >
-                  <div className="relative min-h-0 flex-1 overflow-hidden rounded-t-2xl">
-                    <div
-                      className="absolute left-0 right-0 top-1/2 w-full -translate-y-1/2 aspect-[4/3] bg-gradient-to-br from-cyan-500/20 via-white/10 to-amber-500/15"
-                      aria-hidden
-                    />
+                  <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-t-2xl bg-gradient-to-br from-cyan-500/10 via-white/5 to-amber-500/10">
+                    {FEATURE_IMAGES[feature.image] ? (
+                      <img
+                        src={FEATURE_IMAGES[feature.image]}
+                        alt=""
+                        className="h-full w-full object-contain object-center"
+                        aria-hidden
+                      />
+                    ) : (
+                      <div
+                        className="absolute left-0 right-0 top-1/2 w-full -translate-y-1/2 aspect-[4/3] bg-gradient-to-br from-cyan-500/20 via-white/10 to-amber-500/15"
+                        aria-hidden
+                      />
+                    )}
                   </div>
                   <div className="flex min-h-[4rem] shrink-0 flex-col justify-center overflow-hidden px-4 py-2 sm:min-h-[4.25rem] sm:py-2.5 md:min-h-[4.5rem] md:px-5 md:py-3">
                     <h3 className="truncate text-base font-medium text-white sm:text-lg md:text-xl">
