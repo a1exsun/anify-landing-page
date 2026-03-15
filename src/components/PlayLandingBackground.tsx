@@ -133,8 +133,7 @@ export function PlayLandingBackground() {
       ctx!.fillRect(0, 0, w, h);
       const breathe = Math.sin(time * 0.5) * 0.01 + 0.01;
       ctx!.lineWidth = 0.5;
-      for (let i = 0; i < vLines.length; i++) {
-        const x = vLines[i];
+      for (const [i, x] of vLines.entries()) {
         const distFromCenter = Math.abs(x - w / 2) / (w / 2);
         const wave = Math.sin(time * 0.3 + i * 0.5) * 0.01;
         const alpha = Math.max(0.015, 0.04 + (1 - distFromCenter) * 0.03 + breathe + wave);
@@ -145,8 +144,7 @@ export function PlayLandingBackground() {
         ctx!.stroke();
       }
       const horizonY = h * 0.3;
-      for (let i = 0; i < hLineYs.length; i++) {
-        const y = hLineYs[i];
+      for (const [i, y] of hLineYs.entries()) {
         const distFromHorizon = Math.abs(y - horizonY) / h;
         const wave = Math.sin(time * 0.4 + i * 0.3) * 0.01;
         const alpha = Math.max(0.015, 0.06 - distFromHorizon * 0.06 + breathe + wave);
@@ -158,9 +156,11 @@ export function PlayLandingBackground() {
       }
       ctx!.lineWidth = 1;
       for (let vi = 0; vi < vLines.length; vi += 3) {
+        const ix = vLines[vi];
+        if (ix === undefined) continue;
         for (let hi = 0; hi < hLineYs.length; hi += 4) {
-          const ix = vLines[vi];
           const iy = hLineYs[hi];
+          if (iy === undefined) continue;
           const flicker = Math.sin(time * 1.5 + vi * 2.1 + hi * 3.7) * 0.5 + 0.5;
           const alpha = flicker * 0.08;
           if (alpha > 0.02) {
@@ -182,6 +182,7 @@ export function PlayLandingBackground() {
       maybeSpawnPulse();
       for (let i = pulses.length - 1; i >= 0; i--) {
         const p = pulses[i];
+        if (!p) continue;
         p.radius += p.speed;
         const life = 1 - p.radius / p.maxRadius;
         if (life <= 0) {
