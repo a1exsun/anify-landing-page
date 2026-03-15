@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useMemo, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 
@@ -18,12 +18,31 @@ gsap.registerPlugin(ScrollToPlugin);
 
 export const NavContext = createContext<((hash: string) => void) | null>(null);
 
+export type PinRangeContextValue = {
+  setPinRange: (start: number, end: number) => void;
+  clearPinRange: () => void;
+};
+export const PinRangeContext = createContext<PinRangeContextValue | null>(null);
+
 export default function App() {
   const animatorRef = useRef<ScrollAnimator | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<SplatScene | null>(null);
+  const pinRangeRef = useRef<{ start: number; end: number } | null>(null);
   const [, setSceneTick] = useState(0);
   const debug = isLandingDebugMode();
+
+  const pinRangeContextValue = useMemo<PinRangeContextValue>(
+    () => ({
+      setPinRange: (start: number, end: number) => {
+        pinRangeRef.current = { start, end };
+      },
+      clearPinRange: () => {
+        pinRangeRef.current = null;
+      },
+    }),
+    [],
+  );
 
   const navigateToSection = useCallback((hash: string) => {
     const target = getTargetScroll(hash);
@@ -66,7 +85,9 @@ export default function App() {
         return;
       }
       animatorRef.current = new ScrollAnimator(camera, () => scene.render());
-      animatorRef.current.attach(scrollContainer);
+      animatorRef.current.attach(scrollContainer, {
+        getPinRange: () => pinRangeRef.current,
+      });
     },
     [debug],
   );
@@ -80,20 +101,22 @@ export default function App() {
 
   return (
     <NavContext.Provider value={navigateToSection}>
-      <SplatCanvas onSceneReady={handleSceneReady} />
-      <SiteHeader />
-      <div
-        ref={scrollRef}
-        data-scroll-root
-        className={`relative z-10 ${debug ? "landing-debug-scroll pointer-events-none" : ""}`}
-      >
-        <HeroSection />
-        <FeaturesSection />
+      <PinRangeContext.Provider value={pinRangeContextValue}>
+        <SplatCanvas onSceneReady={handleSceneReady} />
+        <SiteHeader />
+        <div
+          ref={scrollRef}
+          data-scroll-root
+          className={`relative z-10 ${debug ? "landing-debug-scroll pointer-events-none" : ""}`}
+        >
+          <HeroSection />
+          <FeaturesSection />
         <HighlightsSection />
         <RoadmapSection />
         <PlayCtaSection />
       </div>
       {debug ? <LandingDebugPanel scene={sceneRef.current} /> : null}
+      </PinRangeContext.Provider>
     </NavContext.Provider>
   );
 }

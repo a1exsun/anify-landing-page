@@ -11,6 +11,8 @@ function smoothstep(t: number): number {
   return t * t * (3 - 2 * t);
 }
 
+export type PinRangeGetter = () => { start: number; end: number } | null;
+
 export class ScrollAnimator {
   private camera: THREE.PerspectiveCamera;
   private cameraPath: CameraPath;
@@ -19,6 +21,7 @@ export class ScrollAnimator {
   private scrollTrigger: ScrollTrigger | null = null;
   private directTween: gsap.core.Tween | null = null;
   private isDirectAnimating = false;
+  private getPinRange: PinRangeGetter | null = null;
 
   constructor(camera: THREE.PerspectiveCamera, renderFn: () => void, cameraPath = new CameraPath()) {
     this.camera = camera;
@@ -30,11 +33,12 @@ export class ScrollAnimator {
     this.renderFn();
   }
 
-  attach(scrollContainer: HTMLElement): void {
+  attach(scrollContainer: HTMLElement, options?: { getPinRange?: PinRangeGetter }): void {
     if (this.reducedMotion) {
       return;
     }
 
+    this.getPinRange = options?.getPinRange ?? null;
     this.scrollTrigger?.kill();
     this.scrollTrigger = ScrollTrigger.create({
       trigger: scrollContainer,
@@ -43,7 +47,32 @@ export class ScrollAnimator {
       scrub: 1.65,
       onUpdate: (self) => {
         if (this.isDirectAnimating) return;
-        this.updateCamera(self.progress);
+        let progress = self.progress;
+        const range = this.getScrollRange();
+        const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
+        if (range && this.getPinRange) {
+          const pin = this.getPinRange();
+          if (pin) {
+            const pinnedProgress = (pin.start - range.start) / (range.end - range.start);
+            const pinnedProgressClamped = Math.max(0, Math.min(1, pinnedProgress));
+            const actualProgress = (scrollY - range.start) / (range.end - range.start);
+            const actualClamped = Math.max(0, Math.min(1, actualProgress));
+            const catchUpExitPx = typeof window !== "undefined" ? window.innerHeight * 0.35 : 120;
+            const catchUpEnterPx = typeof window !== "undefined" ? window.innerHeight * 0.55 : 180;
+            if (scrollY >= pin.start && scrollY <= pin.end) {
+              progress = pinnedProgressClamped;
+            } else if (scrollY > pin.end && scrollY < pin.end + catchUpExitPx) {
+              const t = (scrollY - pin.end) / catchUpExitPx;
+              const e = t * t * (3 - 2 * t);
+              progress = pinnedProgressClamped + (actualClamped - pinnedProgressClamped) * e;
+            } else if (scrollY < pin.start && scrollY > pin.start - catchUpEnterPx) {
+              const t = (pin.start - scrollY) / catchUpEnterPx;
+              const e = 1 - t;
+              progress = actualClamped + (pinnedProgressClamped - actualClamped) * e;
+            }
+          }
+        }
+        this.updateCamera(progress);
         this.renderFn();
       },
     });

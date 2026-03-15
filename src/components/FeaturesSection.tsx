@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { PinRangeContext } from "@/App";
 import { getGlassClass } from "@/utils/useGlassFallback";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -11,132 +12,237 @@ const FEATURES = [
     id: "ai",
     name: "AI companion",
     description:
-      "Agents stay with you across sessions—memory and dialogue tied to who you are here. Companions and rivals can call back what actually happened, not a reset chat box.",
+      "Persistent NPC agents carry memory and relationship state across sessions.",
+    image: "ai",
   },
   {
     id: "adv",
     name: "Adventure",
     description:
-      "Campaign-style beats: branching objectives and rising stakes so every run has somewhere to go. Exploration and story pull in the same direction.",
+      "Branching objectives and rising stakes drive each run forward.",
+    image: "adv",
   },
   {
     id: "cmb",
     name: "Combat",
     description:
-      "Fights happen where you already are—same space, same context. When talk ends, tension has a cost; outcomes feed the next leg of the road.",
+      "Combat grows out of the world state, not a separate mode.",
+    image: "cmb",
   },
   {
     id: "town",
     name: "Town exploration",
     description:
-      "Hubs you revisit—shops, boards, guilds, NPC rhythms that shift as you progress. A base that grows with you, not a one-off backdrop.",
+      "Towns work as persistent hubs with shops, guilds, and changing routines.",
+    image: "town",
   },
 ];
 
+const ENTRANCE_END = 0.18;
+const CAROUSEL_START = 0.2;
+const CARD_COUNT = FEATURES.length;
+const HOLD_RATIO = 0.82;
+
+function easeSmooth(t: number): number {
+  return t * t * (3 - 2 * t);
+}
+
+const PIN_DURATION = "280%";
+const FADE_AFTER_PIN_VH = 0.28;
+
 export function FeaturesSection() {
-  const cardsRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const contentWrapRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const glassClass = getGlassClass();
+  const pinRangeContext = useContext(PinRangeContext);
 
   useEffect(() => {
-    const cards = cardsRef.current;
     const section = sectionRef.current;
-    if (!cards || !section) {
+    const track = trackRef.current;
+    const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+
+    if (!section || !track || cards.length !== CARD_COUNT) {
       return;
     }
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set(cards, { clearProps: "all", opacity: 1, x: 0 });
+      gsap.set([track, cards], { clearProps: "all" });
+      cards.forEach((c) => gsap.set(c, { opacity: 1, scale: 1, filter: "none" }));
+      if (contentWrapRef.current) gsap.set(contentWrapRef.current, { clearProps: "opacity,transform" });
       return;
     }
 
-    const ease = (t: number) => t * t * (3 - 2 * t);
-
-    const apply = (raw: number) => {
-      const p = Math.min(1, Math.max(0, raw));
-      const inEnd = 0.28;
-      const outStart = 0.66;
-      let x = 0;
-      let opacity = 1;
-      let blurPx = 0;
-      if (p < inEnd) {
-        const t = ease(p / inEnd);
-        x = 88 * (1 - t);
-        opacity = 0.15 + 0.85 * t;
-        blurPx = 10 * (1 - t);
-      } else if (p > outStart) {
-        const t = ease((p - outStart) / (1 - outStart));
-        x = 88 * t;
-        opacity = 1 - 0.72 * t;
-        blurPx = 8 * t;
+    const apply = (progress: number) => {
+      if (progress < ENTRANCE_END) {
+        const t = progress / ENTRANCE_END;
+        const baseX = 100;
+        cards.forEach((card, i) => {
+          const staggerStart = (i / CARD_COUNT) * 0.5;
+          const s = Math.max(0, Math.min(1, (t - staggerStart) / (1 - staggerStart)));
+          const x = baseX * (1 - easeSmooth(s));
+          const opacity = 0.25 + 0.75 * easeSmooth(s);
+          gsap.set(card, {
+            x,
+            opacity,
+            scale: 1,
+            filter: "none",
+          });
+        });
+        gsap.set(track, { x: 0 });
+        return;
       }
-      gsap.set(cards, {
-        x,
-        opacity,
-        filter: blurPx > 0.4 ? `blur(${blurPx}px)` : "none",
+
+      const carouselT = Math.max(0, (progress - CAROUSEL_START) / (1 - CAROUSEL_START));
+      const segment = 1 / CARD_COUNT;
+      const segIndex = Math.min(CARD_COUNT - 1, Math.floor(carouselT / segment));
+      const tInSeg = segment > 0 ? (carouselT - segIndex * segment) / segment : 0;
+      const transitionStart = HOLD_RATIO;
+      const frac =
+        tInSeg < transitionStart
+          ? 0
+          : Math.min(1, (tInSeg - transitionStart) / (1 - transitionStart));
+      const currentIndex = segIndex;
+
+      cards.forEach((card, i) => {
+        const dist = i - currentIndex;
+        let scale: number;
+        let blurPx: number;
+        let opacity: number;
+        if (dist === 0) {
+          scale = 1;
+          blurPx = 0;
+          opacity = 1;
+        } else if (dist === -1) {
+          const u = 1 - frac;
+          scale = 0.8 + 0.2 * u;
+          blurPx = 2 + 5 * (1 - u);
+          opacity = 0.6 + 0.4 * u;
+        } else if (dist === 1) {
+          const u = frac;
+          scale = 0.8 + 0.2 * (1 - u);
+          blurPx = 2 + 5 * u;
+          opacity = 0.6 + 0.4 * (1 - u);
+        } else {
+          scale = 0.72;
+          blurPx = 8;
+          opacity = 0.45;
+        }
+        gsap.set(card, {
+          x: 0,
+          opacity,
+          scale,
+          filter: blurPx > 0.4 ? `blur(${blurPx}px)` : "none",
+        });
       });
+
+      const slotPct = 100 / CARD_COUNT;
+      gsap.set(track, { x: `${-(currentIndex + frac) * slotPct}%` });
     };
 
-    const st = ScrollTrigger.create({
+    gsap.set(cards, { x: 120, opacity: 0.2 });
+    gsap.set(track, { x: 0 });
+
+    const setPinRange = pinRangeContext?.setPinRange;
+    const clearPinRange = pinRangeContext?.clearPinRange;
+
+    const pinSt = ScrollTrigger.create({
       trigger: section,
-      start: "top bottom",
-      end: "bottom top",
-      scrub: 0.72,
-      onUpdate: (self) => apply(self.progress),
+      start: "top top",
+      end: `+=${PIN_DURATION}`,
+      pin: true,
+      scrub: 0.9,
+      onUpdate: (self) => {
+        if (setPinRange) setPinRange(self.start, self.end);
+        apply(self.progress);
+      },
+    });
+    if (setPinRange) setPinRange(pinSt.start, pinSt.end);
+
+    const fadeAfterPx = typeof window !== "undefined" ? window.innerHeight * FADE_AFTER_PIN_VH : 200;
+    const fadeSt = ScrollTrigger.create({
+      trigger: document.body,
+      start: () => pinSt.end,
+      end: () => pinSt.end + fadeAfterPx,
+      scrub: 0.4,
+      onUpdate: (self) => {
+        const contentWrap = contentWrapRef.current;
+        if (contentWrap) {
+          const e = self.progress * self.progress;
+          gsap.set(contentWrap, { opacity: 1 - e, y: -24 * e });
+        }
+      },
     });
 
-    apply(st.progress);
     requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
-      st.kill();
-      gsap.set(cards, { clearProps: "opacity,transform,filter" });
+      if (clearPinRange) clearPinRange();
+      fadeSt.kill();
+      pinSt.kill();
+      gsap.set([track, cards], { clearProps: "opacity,transform,filter" });
+      if (contentWrapRef.current) gsap.set(contentWrapRef.current, { clearProps: "opacity,transform" });
     };
-  }, []);
+  }, [pinRangeContext]);
 
   return (
     <section
       id="features"
       ref={sectionRef}
-      className="relative box-border flex h-[100svh] max-h-[100svh] min-h-[100svh] items-stretch justify-end overflow-hidden px-4 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-8 md:px-12 lg:px-16"
+      className="relative flex min-h-[100vh] w-full flex-col overflow-hidden px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-[max(calc(3.25rem+0.75rem+env(safe-area-inset-top)),env(safe-area-inset-top))] sm:px-6 sm:pt-[max(calc(3.25rem+1rem+env(safe-area-inset-top)),env(safe-area-inset-top))] md:px-8 md:pt-[max(calc(3.25rem+1.25rem+env(safe-area-inset-top)),env(safe-area-inset-top))] lg:px-10 lg:pt-[max(calc(3.25rem+1.5rem+env(safe-area-inset-top)),env(safe-area-inset-top))]"
     >
-      <div
-        ref={cardsRef}
-        className="ml-auto flex h-full w-full max-w-xl flex-col will-change-transform lg:max-w-2xl"
-      >
-        <header className="shrink-0 pt-2 text-right md:pt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-100/70 sm:text-[0.8rem]">
-            Features
-          </p>
-          <h2
-            className="mt-3 max-w-xl text-2xl font-semibold leading-[1.15] tracking-tight text-white sm:mt-4 sm:text-3xl md:ml-auto md:text-[1.75rem] md:leading-[1.12] lg:text-4xl lg:leading-[1.1]"
-            style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}
-          >
-            Forge bonds in the tavern, legends in the fray.
-          </h2>
-        </header>
+      <header className="relative z-10 shrink-0 pb-2 text-center sm:pb-2.5 md:pb-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-100/70 sm:text-[0.8rem]">
+          Features
+        </p>
+        <h2
+          className="mx-auto mt-1.5 max-w-4xl text-xl font-semibold leading-tight tracking-tight text-white sm:mt-2 sm:text-2xl md:whitespace-nowrap md:text-[1.75rem] lg:text-3xl xl:text-4xl"
+          style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}
+        >
+          Forge bonds in the tavern, legends in the fray.
+        </h2>
+      </header>
 
-        <div className="mt-4 flex min-h-0 flex-1 flex-col gap-2 sm:mt-5 sm:gap-2.5 md:gap-3 lg:mt-6 lg:gap-4">
-          {FEATURES.map((feature) => (
-            <article
-              key={feature.id}
-              data-feature-card
-              className={`${glassClass} flex min-h-0 flex-1 basis-0 items-center gap-3 rounded-2xl border border-white/10 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 md:px-6`}
-            >
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+        <div className="h-full w-full max-w-5xl overflow-hidden py-0.5 md:max-w-6xl md:py-1">
+          <div ref={contentWrapRef} className="h-full w-full will-change-transform">
+          <div
+            ref={trackRef}
+            className="flex h-full max-h-[min(82vh,38rem)] will-change-transform sm:max-h-[min(84vh,40rem)] md:max-h-[min(86vh,44rem)]"
+            style={{ width: `${CARD_COUNT * 100}%` }}
+          >
+            {FEATURES.map((feature, index) => (
               <div
-                className="h-11 w-11 shrink-0 rounded-xl border border-white/14 bg-white/[0.07] sm:h-12 sm:w-12 md:h-14 md:w-14"
-                aria-hidden
-              />
-              <div className="min-w-0 flex-1 py-0.5">
-                <h3 className="text-lg font-medium text-white sm:text-xl">
-                  {feature.name}
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/70 sm:mt-2 sm:text-[0.95rem] md:text-base md:leading-relaxed">
-                  {feature.description}
-                </p>
+                key={feature.id}
+                ref={(el) => {
+                  cardRefs.current[index] = el;
+                }}
+                className="flex h-full shrink-0 flex-col overflow-hidden rounded-2xl border border-white/12 px-1 will-change-transform first:pl-0 last:pr-0 sm:px-1.5 md:px-2"
+                style={{ width: `${100 / CARD_COUNT}%` }}
+              >
+                <div
+                  className={`${glassClass} flex h-full min-h-0 flex-col overflow-hidden border-0`}
+                >
+                  <div className="relative min-h-0 flex-1 overflow-hidden rounded-t-2xl">
+                    <div
+                      className="absolute left-0 right-0 top-1/2 w-full -translate-y-1/2 aspect-[4/3] bg-gradient-to-br from-cyan-500/20 via-white/10 to-amber-500/15"
+                      aria-hidden
+                    />
+                  </div>
+                  <div className="flex min-h-[4rem] shrink-0 flex-col justify-center overflow-hidden px-4 py-2 sm:min-h-[4.25rem] sm:py-2.5 md:min-h-[4.5rem] md:px-5 md:py-3">
+                    <h3 className="truncate text-base font-medium text-white sm:text-lg md:text-xl">
+                      {feature.name}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-sm leading-snug text-white/70 sm:mt-1.5 sm:text-[0.9375rem] md:leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </article>
-          ))}
+            ))}
+          </div>
+          </div>
         </div>
       </div>
     </section>
