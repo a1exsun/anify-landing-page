@@ -112,7 +112,7 @@ export function SiteHeader() {
             ))}
             <a
               href="#play"
-              className={playGoldClass}
+              className={`${playGoldClass} ml-2 md:ml-3`}
               onClick={(e) => {
                 e.preventDefault();
                 scrollTo("#play");
@@ -193,27 +193,6 @@ export function SiteHeader() {
                   {label}
                 </a>
               ))}
-              <a
-                href={DISCORD_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg px-3 py-3 text-[0.95rem] font-medium text-white/90 active:bg-white/10"
-                onClick={() => setMenuOpen(false)}
-              >
-                <DiscordIcon className="h-5 w-5" />
-                Discord
-              </a>
-              <a
-                href="#play"
-                className="rounded-lg px-3 py-3 text-[0.95rem] font-medium text-amber-200 active:bg-white/10"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMenuOpen(false);
-                  scrollTo("#play");
-                }}
-              >
-                Play
-              </a>
             </nav>
           </div>
         ) : null}
