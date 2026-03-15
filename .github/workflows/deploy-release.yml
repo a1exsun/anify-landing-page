@@ -35,6 +35,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Download splat assets for static hosting
+        run: |
+          mkdir -p public/gs
+          curl -fL "https://oss.anify.ai/gs/elder-tree-hollow_500k.spz" -o public/gs/elder-tree-hollow_500k.spz
+          curl -fL "https://oss.anify.ai/gs/elder-tree-hollow_100k.spz" -o public/gs/elder-tree-hollow_100k.spz
+
       - name: Build
         env:
           GITHUB_PAGES: "1"
