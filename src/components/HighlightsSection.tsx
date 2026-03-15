@@ -10,45 +10,45 @@ gsap.registerPlugin(ScrollTrigger);
 const HIGHLIGHTS = [
   {
     eyebrow: "Gaussian worlds",
-    title: "Game-ready splat scenes—not just a backdrop.",
+    title: "Game-ready 3D worlds built from Gaussian splats. ",
     description:
-      "Game-ready 3D worlds built from Gaussian splats. Spatial, lit, and interactive scenes that move beyond passive backdrops.",
+      "Spatial, lit, and interactive scenes that move beyond passive backdrops.",
   },
   {
     eyebrow: "R3F + physics",
-    title: "React Three Fiber and a real web physics stack.",
+    title: "React Three Fiber with a real-time web physics stack.",
     description:
-      "Familiar React ergonomics in 3D, with rigid bodies and interactions that feel grounded instead of decorative.",
+      "Grounded movement and interactions make the world feel responsive and alive.",
   },
   {
     eyebrow: "UGC & tooling",
-    title: "Scene configurator and creator pipelines.",
+    title: "Creator pipelines for building, tuning, and shipping scenes.",
     description:
-      "Layout, tune, and ship spaces without losing authorship—built for iteration and community-built corners.",
+      "Designed for fast iteration while preserving authorship and world consistency.",
   },
   {
     eyebrow: "Structured narrative",
-    title: "Campaign beats and mission-driven arcs.",
+    title: "Mission-driven arcs with branching objectives and rising stakes.",
     description:
-      "Objectives and story structure that pull the same direction—so exploration and plot reinforce each other.",
+      "Exploration and story progression stay tightly connected throughout the run.",
   },
   {
-    eyebrow: "OpenClaw as a service",
-    title: "Sandbox server architecture you can rely on.",
+    eyebrow: "Sandboxed Agent Runtime",
+    title: "A reliable service layer for persistent agents and sessions.",
     description:
-      "Agents and sessions backed by a service-shaped core: isolated sandboxes, clear boundaries, room to scale.",
+      "Isolated execution and clear boundaries make the system safer, more stable, and easier to scale.",
   },
   {
-    eyebrow: "Agent fabric",
-    title: "User agent mapping, orchestration, and shared control.",
+    eyebrow: "Agent Orchestration",
+    title: "User agents, world agents, and shared control in one coordinated system.",
     description:
-      "Some agents live with you; some we operate—mapped cleanly so ownership and routing stay understandable.",
+      "Clear routing and role design keep multi-agent interactions understandable and manageable.",
   },
   {
     eyebrow: "Long-term memory",
-    title: "We ship against two open memory systems.",
+    title: "Persistent memory built on explicit, auditable storage layers.",
     description:
-      "Integrated with OpenClaw-RL and memory-lancedb-pro so persistence stays explicit and auditable—not a black box.",
+      "Characters and sessions can carry forward context, recall, and continuity over time.",
     links: [
       { label: "OpenClaw-RL", href: "https://github.com/Gen-Verse/OpenClaw-RL" },
       {
@@ -146,6 +146,8 @@ export function HighlightsSection() {
               key={item.eyebrow}
               className={`min-w-0 border-l border-white/12 pl-5 md:pl-6 ${
                 index === HIGHLIGHTS.length - 1 ? "md:col-span-2" : ""
+              } ${
+                item.eyebrow === "Sandboxed Agent Runtime" ? "md:self-center" : ""
               }`}
             >
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-cyan-100/60">
