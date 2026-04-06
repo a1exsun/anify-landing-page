@@ -5,10 +5,13 @@ export default {
     'header-max-length': [2, 'always', 200],
     'header-min-length': [2, 'always', 80],
     'subject-leading-capital': [2, 'always'],
-    'body-empty': [2, 'always'],
-    'footer-empty': [2, 'always'],
+    'body-leading-blank': [0],
+    'body-max-line-length': [0],
+    'footer-leading-blank': [0],
+    'footer-max-line-length': [0],
     'subject-case': [2, 'always', ['sentence-case']],
     'no-chinese': [2, 'always'],
+    'no-claude': [2, 'always'],
   },
   plugins: [
     {
@@ -40,6 +43,15 @@ export default {
           return [
             !hasChinese,
             'Commit message must not contain Chinese characters',
+          ]
+        },
+        'no-claude': ({ header, body, footer }) => {
+          const claudeRegex = /claude/i
+          const texts = [header, body, footer].filter(Boolean)
+          const hasClaude = texts.some((text) => claudeRegex.test(text))
+          return [
+            !hasClaude,
+            'Commit message must not contain Claude references',
           ]
         },
       },
