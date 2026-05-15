@@ -42,9 +42,6 @@ jobs:
           curl -fL "https://oss.anify.ai/gs/elder-tree-hollow_loading.spz" -o public/gs/elder-tree-hollow_loading.spz
 
       - name: Build
-        env:
-          GITHUB_PAGES: "1"
-          GITHUB_REPOSITORY: ${{ github.repository }}
         run: pnpm run build
 
       - name: Upload GitHub Pages artifact
