@@ -72,29 +72,37 @@ export function FeaturesSection() {
           <article
             id={`feature-${feature.id}`}
             key={feature.id}
-            className={`${glassClass} grid min-h-[calc(100svh-5rem)] min-w-0 grid-cols-1 overflow-hidden rounded-2xl border border-white/12 bg-white/[0.045] shadow-[0_28px_90px_-50px_rgba(0,0,0,0.7)] lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)] lg:items-center ${
-              index % 2 === 1 ? "lg:[&>div:first-child]:order-2" : ""
-            }`}
+            className="relative min-h-[calc(100svh-5rem)] min-w-0 overflow-hidden rounded-2xl border border-white/12 bg-[#050810] shadow-[0_28px_90px_-50px_rgba(0,0,0,0.7)]"
           >
-            <div className="relative flex min-h-[18rem] items-center justify-center overflow-hidden bg-gradient-to-br from-cyan-500/10 via-white/5 to-amber-500/10 sm:min-h-[24rem] lg:min-h-full">
-              <img
-                src={FEATURE_IMAGES[feature.image]}
-                alt=""
-                className="h-full w-full object-contain object-center"
-                aria-hidden
-              />
-            </div>
+            <img
+              src={FEATURE_IMAGES[feature.image]}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/68 via-black/18 to-black/14 lg:bg-gradient-to-r lg:from-black/62 lg:via-black/16 lg:to-black/18"
+              aria-hidden
+            />
 
-            <div className="flex min-h-0 flex-col justify-center px-5 py-8 sm:px-7 md:px-10 lg:px-12 lg:py-14">
-              <p className="text-[0.68rem] font-semibold uppercase text-cyan-100/62">
-                {feature.meta}
-              </p>
-              <h3 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-4xl md:text-5xl lg:text-[3.25rem]">
-                {feature.name}
-              </h3>
-              <p className="mt-5 max-w-xl text-base leading-8 text-white/72 md:text-lg md:leading-9">
-                {feature.description}
-              </p>
+            <div
+              className={`relative z-10 flex min-h-[calc(100svh-5rem)] items-end p-4 sm:p-6 md:p-8 lg:items-center ${
+                index % 2 === 1 ? "lg:justify-end" : "lg:justify-start"
+              }`}
+            >
+              <div
+                className={`${glassClass} w-full max-w-xl rounded-2xl border-white/18 bg-[#07101d]/45 px-5 py-6 shadow-[0_22px_70px_-36px_rgba(0,0,0,0.85)] sm:px-7 sm:py-7 md:px-8 md:py-8`}
+              >
+                <p className="text-[0.68rem] font-semibold uppercase text-cyan-100/72">
+                  {feature.meta}
+                </p>
+                <h3 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-4xl md:text-5xl lg:text-[3.25rem]">
+                  {feature.name}
+                </h3>
+                <p className="mt-5 max-w-xl text-base leading-8 text-white/78 md:text-lg md:leading-9">
+                  {feature.description}
+                </p>
+              </div>
             </div>
           </article>
         ))}
