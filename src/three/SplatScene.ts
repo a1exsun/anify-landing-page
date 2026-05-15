@@ -25,7 +25,7 @@ type SplatMeshInstance = SplatMesh & {
 function getProgressiveUrls(splatUrl: string): { full: string; preview: string } {
   if (splatUrl.endsWith("_500k.spz")) {
     const base = splatUrl.slice(0, -"_500k.spz".length);
-    return { preview: `${base}_100k.spz`, full: splatUrl };
+    return { preview: `${base}_loading.spz`, full: splatUrl };
   }
 
   return { preview: splatUrl, full: splatUrl };

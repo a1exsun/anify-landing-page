@@ -39,7 +39,7 @@ jobs:
         run: |
           mkdir -p public/gs
           curl -fL "https://oss.anify.ai/gs/elder-tree-hollow_500k.spz" -o public/gs/elder-tree-hollow_500k.spz
-          curl -fL "https://oss.anify.ai/gs/elder-tree-hollow_100k.spz" -o public/gs/elder-tree-hollow_100k.spz
+          curl -fL "https://oss.anify.ai/gs/elder-tree-hollow_loading.spz" -o public/gs/elder-tree-hollow_loading.spz
 
       - name: Build
         env:
